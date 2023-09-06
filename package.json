@@ -1,0 +1,14 @@
+{
+  "name": "fungus-gui",
+  "version": "1.0.0",
+  "description": "A frontend to the FUNGUS plagiarism detection tool.",
+  "main": "./src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "lint": "npx eslint --fix ."
+  },
+  "devDependencies": {
+    "electron": "^26.1.0",
+    "eslint": "^8.48.0"
+  }
+}
