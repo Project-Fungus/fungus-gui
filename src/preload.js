@@ -1,11 +1,13 @@
-window.addEventListener("DOMContentLoaded", () => {
-    const replaceText = (selector, text) => {
-        const element = document.getElementById(selector);
-        if (element)
-            element.innerText = text;
-    };
+const { contextBridge, ipcRenderer } = require("electron");
+const fs = require("fs/promises");
+const path = require("path");
 
-    for (const dependency of ["chrome", "node", "electron"]) {
-        replaceText(`${dependency}-version`, process.versions[dependency]);
-    }
+contextBridge.exposeInMainWorld("electronApi", {
+    onOpenFile: (callback) => ipcRenderer.on("open-file", callback),
+    readFile: readFile
 });
+
+async function readFile(directoryPath, filePath) {
+    const combinedPath = path.join(directoryPath, filePath);
+    return await fs.readFile(combinedPath, "utf-8");
+}

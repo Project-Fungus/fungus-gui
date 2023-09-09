@@ -1,0 +1,51 @@
+.vertical-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5em;
+}
+
+.project-pair {
+    border: 1px solid darkgrey;
+    padding: 0.5em;
+}
+
+.current-project-pair {
+    background: lightgrey;
+}
+
+.project-pair:hover {
+    background-color: darkgrey;
+}
+
+.unselected-highlighted {
+    background-color: yellow;
+}
+
+.selected-highlighted {
+    background: orange;
+}
+
+/* TODO: Stretch the code blocks to be as wide as possible and scroll or wrap if the code is too wide. */
+/* TODO: Fix the height of the code blocks and scroll if it's too long. */
+pre {
+    border: 1px solid darkgrey;
+    background-color: lightgrey;
+    padding: 0.5em;
+    margin: 0;
+    font-size: medium;
+}
+
+#outer-container,
+#project-code-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+#outer-container {
+    visibility: hidden;
+}
+
+#project-pair-list {
+    border-right: 2px solid black;
+}

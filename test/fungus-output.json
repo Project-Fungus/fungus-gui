@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "num_project_pairs": 2
+  },
+  "project_pairs": [
+    {
+      "project1": "Project 1",
+      "project2": "Project 2",
+      "num_matches": 2,
+      "matches": [
+        {
+          "project1_occurrences": [
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 322,
+                "end": 801
+              }
+            },
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 951,
+                "end": 1430
+              }
+            },
+            {
+              "file": "Project 1/file2.s",
+              "span": {
+                "start": 128,
+                "end": 606
+              }
+            }
+          ],
+          "project2_occurrences": [
+            {
+              "file": "Project 2/file.s",
+              "span": {
+                "start": 594,
+                "end": 1072
+              }
+            }
+          ]
+        },
+        {
+          "project1_occurrences": [
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 1703,
+                "end": 1737
+              }
+            }
+          ],
+          "project2_occurrences": [
+            {
+              "file": "Project 2/file.s",
+              "span": {
+                "start": 1094,
+                "end": 1128
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "project1": "Project 1",
+      "project2": "Project 3",
+      "num_matches": 1,
+      "matches": [
+        {
+          "project1_occurrences": [
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 1452,
+                "end": 1697
+              }
+            }
+          ],
+          "project2_occurrences": [
+            {
+              "file": "Project 3/file.s",
+              "span": {
+                "start": 0,
+                "end": 245
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
