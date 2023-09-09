@@ -1,7 +1,87 @@
-.vertical-container {
+/* LAYOUT ------------------------------------------------------------------- */
+
+html {
+    position: absolute;
+    inset: 0;
+    padding: 10px;
+    overflow: hidden;
+}
+
+body,
+main,
+#outer-container {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+main {
     display: flex;
     flex-direction: column;
-    padding: 0.5em;
+    align-items: stretch;
+}
+
+#outer-container {
+    flex-grow: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    /* Hide the main content until the user opens a file. */
+    visibility: hidden;
+}
+
+#project-pair-list {
+    height: 100%;
+    max-width: 33vh;
+    overflow: auto;
+    padding: 0.5%;
+    box-sizing: border-box;
+}
+
+#project-pair-container {
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5%;
+    box-sizing: border-box;
+}
+
+#project-code-container {
+    flex-grow: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+#project1-container,
+#project2-container {
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5%;
+    box-sizing: border-box;
+}
+
+#project1-code,
+#project2-code {
+    flex-grow: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+/* END LAYOUT --------------------------------------------------------------- */
+
+#project-pair-list {
+    border-right: 2px solid black;
 }
 
 .project-pair {
@@ -25,27 +105,10 @@
     background: orange;
 }
 
-/* TODO: Stretch the code blocks to be as wide as possible and scroll or wrap if the code is too wide. */
-/* TODO: Fix the height of the code blocks and scroll if it's too long. */
 pre {
     border: 1px solid darkgrey;
     background-color: lightgrey;
-    padding: 0.5em;
+    padding: min(10%, 1em);
     margin: 0;
     font-size: medium;
-}
-
-#outer-container,
-#project-code-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-}
-
-#outer-container {
-    visibility: hidden;
-}
-
-#project-pair-list {
-    border-right: 2px solid black;
 }

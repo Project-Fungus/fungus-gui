@@ -23,9 +23,12 @@ function createWindow() {
             preload: path.join(__dirname, "preload.js"),
             // Allow the preload script to read local files
             sandbox: false
-        }
+        },
+        show: false
     });
+    window.maximize();
     window.loadFile(path.join(__dirname, "project-pairs.html"));
+    window.show();
 }
 
 function createApplicationMenu() {
