@@ -61,7 +61,7 @@ main {
 
 #project1-container,
 #project2-container {
-    flex-grow: 1;
+    flex: 1 1 50%;
     min-width: 0;
     height: 100%;
     display: flex;
@@ -73,9 +73,17 @@ main {
 
 #project1-code,
 #project2-code {
-    flex-grow: 1;
+    flex: 1 0 0;
     min-height: 0;
     overflow: auto;
+}
+
+#project1-other-occurrences-container,
+#project2-other-occurrences-container {
+    overflow-y: auto;
+    max-height: 20%;
+    /* Hide this unless there are other occurrences to show. */
+    display: none;
 }
 
 /* END LAYOUT --------------------------------------------------------------- */

@@ -3,6 +3,7 @@ let state = {
     projectPairs: [],
     currentProjectPair: null,
     currentMatchIndex: null,
+    currentMatch: null
 };
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -36,9 +37,7 @@ async function openFile(file) {
 function displayProjectPairs(projectPairs) {
     const projectPairsContainer = document.getElementById("project-pair-list");
 
-    while (projectPairsContainer.firstChild) {
-        projectPairsContainer.removeChild(projectPairsContainer.firstChild);
-    }
+    removeAllChildren(projectPairsContainer);
 
     for (let i = 0; i < projectPairs.length; i++) {
         const projectPairElement = document.createElement("div");
@@ -94,37 +93,33 @@ async function selectProjectPair(idx) {
 /**
  * Sets the given match as the selected one and updates the display accordingly.
  * 
- * @param {number} idx Index of the match in the list of matches for the current project pair.
+ * @param {number} matchIndex              Index of the match in the list of
+ *                                         matches for the current project pair.
+ * @param {number} project1OccurrenceIndex Index of the occurrence from project
+ *                                         1 to show at first.
+ * @param {number} project2OccurrenceIndex Index of the occurrence from project
+ *                                         2 to show at first.
  */
-async function selectMatch(idx) {
+async function selectMatch(matchIndex, project1OccurrenceIndex,
+    project2OccurrenceIndex) {
+
+    project1OccurrenceIndex = project1OccurrenceIndex || 0;
+    project2OccurrenceIndex = project2OccurrenceIndex || 0;
+
     // TODO: Clearly document the output format of the backend?
-    if (idx < 0 || idx >= state.currentProjectPair.matches.length) {
+    if (matchIndex < 0 || matchIndex >= state.currentProjectPair.matches.length) {
         return;
     }
-    state.currentMatchIndex = idx;
-    const currentMatch = state.currentProjectPair.matches[idx];
+    state.currentMatchIndex = matchIndex;
+    state.currentMatch = state.currentProjectPair.matches[matchIndex];
 
     const totalNumMatches = state.currentProjectPair.matches.length;
-    document.getElementById("match-count").innerText = `Match ${idx + 1}/${totalNumMatches}`;
+    document.getElementById("match-count").innerText = `Match ${matchIndex + 1}/${totalNumMatches}`;
 
-    const project1FirstLocation = currentMatch.project1_occurrences[0];
-    const project2FirstLocation = currentMatch.project2_occurrences[0];
-    await Promise.allSettled(
-        [
-            showCodeLocation(
-                project1FirstLocation.file,
-                project1FirstLocation.span.start,
-                project1FirstLocation.span.end,
-                1
-            ),
-            showCodeLocation(
-                project2FirstLocation.file,
-                project2FirstLocation.span.start,
-                project2FirstLocation.span.end,
-                2
-            )
-        ]
-    );
+    await Promise.allSettled([
+        showCodeLocation(project1OccurrenceIndex, 1),
+        showCodeLocation(project2OccurrenceIndex, 2)
+    ]);
 }
 
 async function selectPreviousMatch() {
@@ -135,11 +130,22 @@ async function selectNextMatch() {
     await selectMatch(state.currentMatchIndex + 1);
 }
 
-async function showCodeLocation(filePath, start, end, pane) {
+async function showCodeLocation(occurrenceIndex, pane) {
+    // TODO: Don't reload and re-highlight the whole file if it's already being
+    // shown.
+
+    const occurrenceList = pane === 1
+        ? state.currentMatch.project1_occurrences
+        : state.currentMatch.project2_occurrences;
+    if (occurrenceIndex < 0 || occurrenceIndex >= occurrenceList.length) {
+        return;
+    }
+    const currentOccurrence = occurrenceList[occurrenceIndex];
+
     // TODO: Handle errors here?
     const fileContents = await window.electronApi.readFile(
         state.projectsDirectoryPath,
-        filePath
+        currentOccurrence.file
     );
 
     // Highlight all the locations in the current file that are relevant for
@@ -151,7 +157,7 @@ async function showCodeLocation(filePath, start, end, pane) {
             ? match.project1_occurrences
             : match.project2_occurrences;
         for (let j = 0; j < locationsForThisPane.length; j++) {
-            if (locationsForThisPane[j].file === filePath) {
+            if (locationsForThisPane[j].file === currentOccurrence.file) {
                 rangesToHighlight.push({
                     startByte: locationsForThisPane[j].span.start,
                     endByte: locationsForThisPane[j].span.end
@@ -165,9 +171,36 @@ async function showCodeLocation(filePath, start, end, pane) {
     codeBlock.innerHTML = highlightedCode;
 
     const filenameElement = document.getElementById(`project${pane}-filename`);
-    filenameElement.innerText = filePath;
+    filenameElement.innerText = currentOccurrence.file;
 
-    scrollToLocation(start, end, pane);
+    scrollToLocation(currentOccurrence.span.start, currentOccurrence.span.end, pane);
+
+    const otherOccurrences = occurrenceList
+        .map((o, i) => ({ occurrence: o, index: i }))
+        .filter(x => x.index != occurrenceIndex);
+    const otherOccurrencesContainerElement =
+        document.getElementById(`project${pane}-other-occurrences-container`);
+    const otherOccurrencesListElement =
+        document.getElementById(`project${pane}-other-occurrences`);
+    if (otherOccurrences.length === 0) {
+        otherOccurrencesContainerElement.style.display = "none";
+        removeAllChildren(otherOccurrencesListElement);
+    }
+    else {
+        removeAllChildren(otherOccurrencesListElement);
+        for (const o of otherOccurrences) {
+            const occurrence = o.occurrence;
+            const index = o.index;
+            const liElement = document.createElement("li");
+            const anchorElement = document.createElement("a");
+            anchorElement.href = "#";
+            anchorElement.onclick = () => showCodeLocation(index, pane);
+            anchorElement.innerHTML = `${occurrence.file}: ${occurrence.span.start}&ndash;${occurrence.span.end}`;
+            liElement.appendChild(anchorElement);
+            otherOccurrencesListElement.appendChild(liElement);
+        }
+        otherOccurrencesContainerElement.style.display = "block";
+    }
 
     // TODO: Test that overlapping highlighted regions are handled properly
 }
@@ -189,7 +222,7 @@ function annotateCode(code, rangesToHighlight) {
     const htmlElementStrings = allRanges.map((r) =>
         // TODO: Let the user click on a highlighted piece of code to jump to that match
         `<span
-            ${r.highlight ? 'class="unselected-highlighted"' : ""}
+            ${r.highlight ? "class='unselected-highlighted'" : ""}
             data-start-byte="${r.startByte}"
             data-end-byte="${r.endByte}"
         >${decoder.decode(codeBytes.slice(r.startByte, r.endByte))}</span>`
@@ -299,5 +332,16 @@ function scrollToLocation(startByte, endByte, pane) {
 
     if (spansToSelect.length >= 1) {
         spansToSelect[0].scrollIntoView();
+    }
+}
+
+/**
+ * Removes all children of the given element.
+ * 
+ * @param {HTMLElement} element
+ */
+function removeAllChildren(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
     }
 }
