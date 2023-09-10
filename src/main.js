@@ -111,9 +111,4 @@ async function openFile(browserWindow) {
         fileContents: fileContents,
         directoryPath: directoryPath,
     });
-
-    // TODO: At what point should the renderer read the students' code?
-    // Probably best to load them lazily for the sake of keeping the app
-    // scalable (avoid reading megabytes at once) and having fast initial load
-    // time.
 }

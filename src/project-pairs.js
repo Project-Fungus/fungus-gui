@@ -141,9 +141,6 @@ async function selectNextMatch() {
 }
 
 async function showCodeLocation(occurrenceIndex, pane) {
-    // TODO: Don't reload and re-highlight the whole file if it's already being
-    // shown.
-
     const occurrenceList = pane === 1
         ? state.currentMatch.project1_occurrences
         : state.currentMatch.project2_occurrences;
@@ -152,25 +149,35 @@ async function showCodeLocation(occurrenceIndex, pane) {
     }
     const currentOccurrence = occurrenceList[occurrenceIndex];
 
+    await loadAndDisplayCode(currentOccurrence.file, pane);
+
+    scrollToLocation(
+        currentOccurrence.span.start, currentOccurrence.span.end, pane);
+
+    showOtherOccurrences(occurrenceList, occurrenceIndex, pane);
+
+    // TODO: Test that overlapping highlighted regions are handled properly
+}
+
+async function loadAndDisplayCode(filePath, pane) {
     // TODO: Handle errors here?
     const fileContents = await window.electronApi.readFile(
         state.projectsDirectoryPath,
-        currentOccurrence.file
+        filePath
     );
 
     // Highlight all the locations in the current file that are relevant for
     // the current project pair
     const rangesToHighlight = [];
-    for (let i = 0; i < state.currentProjectPair.matches.length; i++) {
-        const match = state.currentProjectPair.matches[i];
+    for (const match of state.currentProjectPair.matches) {
         const locationsForThisPane = pane === 1
             ? match.project1_occurrences
             : match.project2_occurrences;
-        for (let j = 0; j < locationsForThisPane.length; j++) {
-            if (locationsForThisPane[j].file === currentOccurrence.file) {
+        for (const location of locationsForThisPane) {
+            if (location.file === filePath) {
                 rangesToHighlight.push({
-                    startByte: locationsForThisPane[j].span.start,
-                    endByte: locationsForThisPane[j].span.end
+                    startByte: location.span.start,
+                    endByte: location.span.end
                 });
             }
         }
@@ -181,11 +188,10 @@ async function showCodeLocation(occurrenceIndex, pane) {
     codeBlock.innerHTML = highlightedCode;
 
     const filenameElement = document.getElementById(`project${pane}-filename`);
-    filenameElement.innerText = currentOccurrence.file;
+    filenameElement.innerText = filePath;
+}
 
-    scrollToLocation(
-        currentOccurrence.span.start, currentOccurrence.span.end, pane);
-
+async function showOtherOccurrences(occurrenceList, occurrenceIndex, pane) {
     const otherOccurrences = occurrenceList
         .map((o, i) => ({ occurrence: o, index: i }))
         .filter(x => x.index != occurrenceIndex);
@@ -214,8 +220,6 @@ async function showCodeLocation(occurrenceIndex, pane) {
         }
         otherOccurrencesContainerElement.style.display = "block";
     }
-
-    // TODO: Test that overlapping highlighted regions are handled properly
 }
 
 /**
@@ -316,13 +320,13 @@ function partition(totalNumBytes, rangesToHighlight) {
                     highlight: r.highlight
                 }))
                 .filter((r) => r.startByte < r.endByte);
-            for (let i = 0; i < updatedRanges.length; i++) {
+            for (const updatedRange of updatedRanges) {
                 sortedRanges = sortedRanges
-                    .filter((r) => r.startByte < updatedRanges[i].startByte)
-                    .concat([updatedRanges[i]])
+                    .filter((r) => r.startByte < updatedRange.startByte)
+                    .concat([updatedRange])
                     .concat(
                         sortedRanges.filter((r) =>
-                            r.startByte >= updatedRanges[i].startByte
+                            r.startByte >= updatedRange.startByte
                         )
                     );
             }
