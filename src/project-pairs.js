@@ -8,8 +8,10 @@ let state = {
 
 window.addEventListener("DOMContentLoaded", function () {
     window.electronApi.onOpenFile((event, file) => openFile(file));
-    document.getElementById("prev-match-btn").addEventListener("click", selectPreviousMatch);
-    document.getElementById("next-match-btn").addEventListener("click", selectNextMatch);
+    document.getElementById("prev-match-btn").addEventListener(
+        "click", selectPreviousMatch);
+    document.getElementById("next-match-btn").addEventListener(
+        "click", selectNextMatch);
 });
 
 /**
@@ -21,7 +23,9 @@ window.addEventListener("DOMContentLoaded", function () {
  * @param {string} file.directoryPath Path to the directory of student projects.
  */
 async function openFile(file) {
-    document.getElementById("current-file-msg").innerHTML = `<b>File:</b> ${file.filePath}<br/><b>Projects directory:</b> ${file.directoryPath}`;
+    document.getElementById("current-file-msg").innerHTML =
+        `<b>File:</b> ${file.filePath}<br/>
+        <b>Projects directory:</b> ${file.directoryPath}`;
     document.getElementById("outer-container").style.visibility = "visible";
 
     state.projectsDirectoryPath = file.directoryPath;
@@ -69,7 +73,8 @@ function displayProjectPairs(projectPairs) {
 }
 
 /**
- * Sets the given project pair as the selected one and updates the display accordingly.
+ * Sets the given project pair as the selected one and updates the display
+ * accordingly.
  * 
  * @param {number} idx Index of the project pair in the list of project pairs.
  */
@@ -81,7 +86,8 @@ async function selectProjectPair(idx) {
 
     const element = document.getElementById(`project-pair${idx}`);
 
-    const selectedProjectPairElements = document.getElementsByClassName("current-project-pair");
+    const selectedProjectPairElements = document.getElementsByClassName(
+        "current-project-pair");
     for (let i = 0; i < selectedProjectPairElements.length; i++) {
         selectedProjectPairElements[i].classList.remove("current-project-pair");
     }
@@ -107,14 +113,18 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
     project2OccurrenceIndex = project2OccurrenceIndex || 0;
 
     // TODO: Clearly document the output format of the backend?
-    if (matchIndex < 0 || matchIndex >= state.currentProjectPair.matches.length) {
+    const isValidIndex =
+        matchIndex >= 0
+        && matchIndex < state.currentProjectPair.matches.length;
+    if (!isValidIndex) {
         return;
     }
     state.currentMatchIndex = matchIndex;
     state.currentMatch = state.currentProjectPair.matches[matchIndex];
 
     const totalNumMatches = state.currentProjectPair.matches.length;
-    document.getElementById("match-count").innerText = `Match ${matchIndex + 1}/${totalNumMatches}`;
+    document.getElementById("match-count").innerText =
+        `Match ${matchIndex + 1}/${totalNumMatches}`;
 
     await Promise.allSettled([
         showCodeLocation(project1OccurrenceIndex, 1),
@@ -173,7 +183,8 @@ async function showCodeLocation(occurrenceIndex, pane) {
     const filenameElement = document.getElementById(`project${pane}-filename`);
     filenameElement.innerText = currentOccurrence.file;
 
-    scrollToLocation(currentOccurrence.span.start, currentOccurrence.span.end, pane);
+    scrollToLocation(
+        currentOccurrence.span.start, currentOccurrence.span.end, pane);
 
     const otherOccurrences = occurrenceList
         .map((o, i) => ({ occurrence: o, index: i }))
@@ -195,7 +206,9 @@ async function showCodeLocation(occurrenceIndex, pane) {
             const anchorElement = document.createElement("a");
             anchorElement.href = "#";
             anchorElement.onclick = () => showCodeLocation(index, pane);
-            anchorElement.innerHTML = `${occurrence.file}: ${occurrence.span.start}&ndash;${occurrence.span.end}`;
+            anchorElement.innerHTML =
+                `${occurrence.file}:
+                ${occurrence.span.start}&ndash;${occurrence.span.end}`;
             liElement.appendChild(anchorElement);
             otherOccurrencesListElement.appendChild(liElement);
         }
@@ -206,10 +219,12 @@ async function showCodeLocation(occurrenceIndex, pane) {
 }
 
 /**
- * Turns the given plaintext code into HTML that can be highlighted, clicked, etc.
+ * Turns the given plaintext code into HTML that can be highlighted, clicked,
+ * etc.
  * 
  * @param {string} code The plaintext code to annotate.
- * @param {{startByte: number, endByte: number}[]} rangesToHighlight The locations to highlight.
+ * @param {{startByte: number, endByte: number}[]} rangesToHighlight 
+ *        The locations to highlight.
  * @returns {string} A string representing the annotated code in HTML.
  */
 function annotateCode(code, rangesToHighlight) {
@@ -220,7 +235,8 @@ function annotateCode(code, rangesToHighlight) {
     const allRanges = partition(codeBytes.length, rangesToHighlight);
 
     const htmlElementStrings = allRanges.map((r) =>
-        // TODO: Let the user click on a highlighted piece of code to jump to that match
+        // TODO: Let the user click on a highlighted piece of code to jump to
+        // that match
         `<span
             ${r.highlight ? "class='unselected-highlighted'" : ""}
             data-start-byte="${r.startByte}"
@@ -244,7 +260,8 @@ function annotateCode(code, rangesToHighlight) {
  * The output ranges will be sorted in increasing order of `startByte`.
  * 
  * @param {number} totalNumBytes The number of bytes to partition.
- * @param {{startByte: number, endByte: number}[]} rangesToHighlight The ranges that must be highlighted.
+ * @param {{startByte: number, endByte: number}[]} rangesToHighlight
+ *        The ranges that must be highlighted.
  * @returns {{startByte: number, endByte: number, highlight: boolean}[]}
  */
 function partition(totalNumBytes, rangesToHighlight) {
@@ -318,8 +335,10 @@ function partition(totalNumBytes, rangesToHighlight) {
 function scrollToLocation(startByte, endByte, pane) {
     const codeBlock = document.getElementById(`project${pane}-code`);
     const spansToSelect = Array.from(codeBlock.childNodes).filter((node) =>
-        (node.dataset.startByte >= startByte && node.dataset.startByte < endByte)
-        || (node.dataset.endByte > startByte && node.dataset.endByte <= endByte)
+        (node.dataset.startByte >= startByte
+            && node.dataset.startByte < endByte)
+        || (node.dataset.endByte > startByte
+            && node.dataset.endByte <= endByte)
     );
 
     const previouslySelectedSpans = Array.from(
