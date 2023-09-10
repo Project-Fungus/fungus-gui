@@ -35,7 +35,7 @@ main {
 #project-pair-list {
     height: 100%;
     max-width: 33vh;
-    overflow: auto;
+    overflow: auto scroll;
     padding: 0.5%;
     box-sizing: border-box;
 }
@@ -88,10 +88,6 @@ main {
 
 /* END LAYOUT --------------------------------------------------------------- */
 
-#project-pair-list {
-    border-right: 2px solid black;
-}
-
 .project-pair {
     border: 1px solid darkgrey;
     padding: 0.5em;
@@ -114,7 +110,8 @@ main {
 }
 
 pre {
-    border: 1px solid darkgrey;
+    border-radius: 5px;
+    border: 1px solid black;
     background-color: lightgrey;
     padding: min(10%, 1em);
     margin: 0;
