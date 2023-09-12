@@ -78,3 +78,7 @@ FIB: .space 4
 // Random text
 // Random text
 // Random text
+
+// This text is to test the frontend's behaviour when highlighted regions
+// overlap. Click each part to see what happens.
+|aaaaaaaaaa|aaaaaaaaaa|aaaaaaaaaa|

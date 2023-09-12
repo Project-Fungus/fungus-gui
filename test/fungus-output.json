@@ -6,7 +6,7 @@
     {
       "project1": "Project 1",
       "project2": "Project 2",
-      "num_matches": 2,
+      "num_matches": 3,
       "matches": [
         {
           "project1_occurrences": [
@@ -34,10 +34,17 @@
           ],
           "project2_occurrences": [
             {
-              "file": "Project 2/file.s",
+              "file": "Project 2/code1.s",
               "span": {
                 "start": 594,
                 "end": 1072
+              }
+            },
+            {
+              "file": "Project 2/code2.s",
+              "span": {
+                "start": 252,
+                "end": 730
               }
             }
           ]
@@ -54,10 +61,44 @@
           ],
           "project2_occurrences": [
             {
-              "file": "Project 2/file.s",
+              "file": "Project 2/code1.s",
               "span": {
                 "start": 1094,
                 "end": 1128
+              }
+            }
+          ]
+        },
+        {
+          "project1_occurrences": [
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 1866,
+                "end": 1889
+              }
+            },
+            {
+              "file": "Project 1/file1.s",
+              "span": {
+                "start": 1877,
+                "end": 1900
+              }
+            }
+          ],
+          "project2_occurrences": [
+            {
+              "file": "Project 2/code1.s",
+              "span": {
+                "start": 1723,
+                "end": 1746
+              }
+            },
+            {
+              "file": "Project 2/code1.s",
+              "span": {
+                "start": 1734,
+                "end": 1757
               }
             }
           ]
@@ -80,6 +121,13 @@
             }
           ],
           "project2_occurrences": [
+            {
+              "file": "Project 3/nonexistent-file.s",
+              "span": {
+                "start": 0,
+                "end": 42
+              }
+            },
             {
               "file": "Project 3/file.s",
               "span": {

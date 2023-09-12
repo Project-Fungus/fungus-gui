@@ -74,9 +74,8 @@ function createApplicationMenu() {
 }
 
 async function openFile(browserWindow) {
-    // TODO: Catch exceptions just in case?
-
     const fileDialogResult = await dialog.showOpenDialog(browserWindow, {
+        title: "Select the plagiarism results file",
         filters: [
             { name: "FUNGUS File", extensions: ["json"] }
         ],
@@ -90,12 +89,22 @@ async function openFile(browserWindow) {
     }
     const filePath = fileDialogResult.filePaths[0];
 
-    const fileText = await fs.readFile(filePath, "utf-8");
-    const fileContents = JSON.parse(fileText);
-
-    // TODO: Validate the file?
+    let fileContents;
+    try {
+        const fileText = await fs.readFile(filePath, "utf-8");
+        fileContents = JSON.parse(fileText);
+    }
+    catch (e) {
+        dialog.showErrorBox(
+            "Failed to open file",
+            `The file "${filePath}" could not be read. Check that the file`
+            + " exists and that you have permission to read it."
+        );
+        return;
+    }
 
     const directoryDialogResult = await dialog.showOpenDialog(browserWindow, {
+        title: "Select the directory containing the projects being compared",
         properties: ["openDirectory"]
     });
     const didInputDirectory = !directoryDialogResult.canceled
