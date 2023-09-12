@@ -109,7 +109,17 @@ async function selectProjectPair(idx) {
 async function selectMatch(matchIndex, project1OccurrenceIndex,
     project2OccurrenceIndex) {
 
+    const isProject1OccurrenceGiven = project1OccurrenceIndex
+        || project1OccurrenceIndex === 0;
+    if (state.currentMatchIndex === matchIndex && !isProject1OccurrenceGiven) {
+        project1OccurrenceIndex = state.currentProject1OccurrenceIndex;
+    }
     project1OccurrenceIndex = project1OccurrenceIndex || 0;
+    const isProject2OccurrenceGiven = project2OccurrenceIndex
+        || project2OccurrenceIndex === 0;
+    if (state.currentMatchIndex === matchIndex && !isProject2OccurrenceGiven) {
+        project2OccurrenceIndex = state.currentProject2OccurrenceIndex;
+    }
     project2OccurrenceIndex = project2OccurrenceIndex || 0;
 
     // TODO: Clearly document the output format of the backend?
@@ -126,7 +136,7 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
     document.getElementById("match-count").innerText =
         `Match ${matchIndex + 1}/${totalNumMatches}`;
 
-    await Promise.allSettled([
+    await Promise.all([
         showCodeLocation(project1OccurrenceIndex, 1),
         showCodeLocation(project2OccurrenceIndex, 2)
     ]);
@@ -148,6 +158,12 @@ async function showCodeLocation(occurrenceIndex, pane) {
         return;
     }
     const currentOccurrence = occurrenceList[occurrenceIndex];
+    if (pane === 1) {
+        state.currentProject1OccurrenceIndex = occurrenceIndex;
+    }
+    else {
+        state.currentProject2OccurrenceIndex = occurrenceIndex;
+    }
 
     await loadAndDisplayCode(currentOccurrence.file, pane);
 
@@ -169,23 +185,31 @@ async function loadAndDisplayCode(filePath, pane) {
     // Highlight all the locations in the current file that are relevant for
     // the current project pair
     const rangesToHighlight = [];
-    for (const match of state.currentProjectPair.matches) {
+    for (let i = 0; i < state.currentProjectPair.matches.length; i++) {
+        const match = state.currentProjectPair.matches[i];
         const locationsForThisPane = pane === 1
             ? match.project1_occurrences
             : match.project2_occurrences;
-        for (const location of locationsForThisPane) {
+        for (let j = 0; j < locationsForThisPane.length; j++) {
+            const location = locationsForThisPane[j];
             if (location.file === filePath) {
                 rangesToHighlight.push({
                     startByte: location.span.start,
-                    endByte: location.span.end
+                    endByte: location.span.end,
+                    matchIndex: i,
+                    occurrenceIndex: j
                 });
             }
         }
     }
-    const highlightedCode = annotateCode(fileContents, rangesToHighlight);
+    const highlightedCodeElements = annotateCode(
+        fileContents, rangesToHighlight, pane);
 
     const codeBlock = document.getElementById(`project${pane}-code`);
-    codeBlock.innerHTML = highlightedCode;
+    removeAllChildren(codeBlock);
+    for (const child of highlightedCodeElements) {
+        codeBlock.appendChild(child);
+    }
 
     const filenameElement = document.getElementById(`project${pane}-filename`);
     filenameElement.innerText = filePath;
@@ -227,28 +251,60 @@ async function showOtherOccurrences(occurrenceList, occurrenceIndex, pane) {
  * etc.
  * 
  * @param {string} code The plaintext code to annotate.
- * @param {{startByte: number, endByte: number}[]} rangesToHighlight 
- *        The locations to highlight.
- * @returns {string} A string representing the annotated code in HTML.
+ * @param {{
+ *      startByte: number,
+ *      endByte: number,
+ *      matchIndex: number,
+ *      occurrenceIndex: number
+ * }[]} rangesToHighlight The locations to highlight.
+ * @returns {HTMLElement[]} HTML elements representing the annotated code.
  */
-function annotateCode(code, rangesToHighlight) {
+function annotateCode(code, rangesToHighlight, pane) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     const codeBytes = encoder.encode(code);
 
     const allRanges = partition(codeBytes.length, rangesToHighlight);
+    // A given highlighted span might come from multiple highlighted code
+    // snippets. When the user clicks on a span, send them to the earliest
+    // one of those code snippets.
+    const allRangesWithSource = allRanges.map((r) => {
+        if (!r.highlight) {
+            return r;
+        }
+        const overlappingHighlightedRanges = rangesToHighlight
+            .filter((rth) =>
+                (rth.startByte >= r.startByte && rth.startByte < r.endByte)
+                || (rth.endByte > r.startByte && rth.endByte <= r.endByte)
+            );
+        let output;
+        if (overlappingHighlightedRanges.length === 0) {
+            output = r;
+        }
+        else {
+            output = overlappingHighlightedRanges.reduce(
+                (r1, r2) => r1.startByte <= r2.startByte ? r1 : r2,
+                overlappingHighlightedRanges[0]);
+        }
+        output.highlight = true;
+        return output;
+    });
 
-    const htmlElementStrings = allRanges.map((r) =>
-        // TODO: Let the user click on a highlighted piece of code to jump to
-        // that match
-        `<span
-            ${r.highlight ? "class='unselected-highlighted'" : ""}
-            data-start-byte="${r.startByte}"
-            data-end-byte="${r.endByte}"
-        >${decoder.decode(codeBytes.slice(r.startByte, r.endByte))}</span>`
-    );
-
-    return htmlElementStrings.join("");
+    return allRangesWithSource.map((r) => {
+        const element = document.createElement("span");
+        if (r.highlight) {
+            element.className = "unselected-highlighted";
+            element.onclick = () => selectMatch(
+                r.matchIndex,
+                pane === 1 ? r.occurrenceIndex : undefined,
+                pane === 1 ? undefined : r.occurrenceIndex);
+        }
+        element.dataset.startByte = r.startByte;
+        element.dataset.endByte = r.endByte;
+        element.innerText = decoder.decode(
+            codeBytes.slice(r.startByte, r.endByte));
+        return element;
+    });
 }
 
 /**
@@ -339,10 +395,7 @@ function partition(totalNumBytes, rangesToHighlight) {
 function scrollToLocation(startByte, endByte, pane) {
     const codeBlock = document.getElementById(`project${pane}-code`);
     const spansToSelect = Array.from(codeBlock.childNodes).filter((node) =>
-        (node.dataset.startByte >= startByte
-            && node.dataset.startByte < endByte)
-        || (node.dataset.endByte > startByte
-            && node.dataset.endByte <= endByte)
+        (node.dataset.startByte >= startByte && node.dataset.endByte <= endByte)
     );
 
     const previouslySelectedSpans = Array.from(
