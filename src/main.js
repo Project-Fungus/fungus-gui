@@ -69,7 +69,6 @@ function createApplicationMenu() {
             ]
         }
     ]);
-    // TODO: Let user run the command-line tool through a GUI?
     Menu.setApplicationMenu(menu);
 }
 

@@ -173,7 +173,6 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
     }
     project2OccurrenceIndex = project2OccurrenceIndex || 0;
 
-    // TODO: Clearly document the output format of the backend?
     const isValidIndex =
         matchIndex >= 0
         && matchIndex < state.currentProjectPair.matches.length;
