@@ -1,13 +1,20 @@
-let state = {
-    projectsDirectoryPath: null,
-    projectPairs: [],
-    currentProjectPair: null,
-    currentMatchIndex: null,
-    currentMatch: null
-};
+class GuiState {
+    constructor(projectsDirectoryPath, projectPairs, warnings) {
+        this.projectsDirectoryPath = projectsDirectoryPath || "";
+        this.projectPairs = projectPairs || [];
+        this.warnings = warnings || [];
+        this.currentProjectPair = 0;
+        this.currentMatchIndex = 0;
+        this.currentMatch = null;
+    }
+}
+
+let state = new GuiState();
 
 window.addEventListener("DOMContentLoaded", function () {
     window.electronApi.onOpenFile((event, file) => openFile(file));
+    document.getElementById("select-view").addEventListener(
+        "change", (event) => showView(event.target));
     document.getElementById("prev-match-btn").addEventListener(
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
@@ -30,24 +37,54 @@ async function openFile(file) {
         return;
     }
 
-    state.projectPairs = file.fileContents.project_pairs;
-    state.projectsDirectoryPath = file.directoryPath;
+    state = new GuiState(
+        file.directoryPath,
+        file.fileContents.project_pairs,
+        file.fileContents.warnings);
 
     document.getElementById("current-file-msg").innerHTML =
         `<b>File:</b> ${file.filePath}<br/>
         <b>Projects directory:</b> ${file.directoryPath}`;
-    if (state.projectPairs.length === 0) {
-        document.getElementById("no-results-msg").style.display = "block";
-        document.getElementById("outer-container").style.visibility = "hidden";
+    await showView();
+}
+
+async function showView() {
+    const noResultsElement = document.getElementById("no-results-msg");
+    const projectPairsContainer
+        = document.getElementById("outer-project-pair-container");
+    const noWarningsElement = document.getElementById("no-warnings-msg");
+    const warningsContainer = document.getElementById("warnings-container");
+    const view = document.getElementById("select-view").value;
+    if (view === "warnings") {
+        noResultsElement.style.display = "none";
+        projectPairsContainer.style.display = "none";
+        if (state.warnings.length === 0) {
+            warningsContainer.style.display = "none";
+            noWarningsElement.style.display = "block";
+        }
+        else {
+            noWarningsElement.style.display = "none";
+            warningsContainer.style.display = "block";
+            displayWarnings(state.warnings);
+        }
     }
     else {
-        document.getElementById("no-results-msg").style.display = "none";
-        document.getElementById("outer-container").style.visibility = "visible";
-
-        displayProjectPairs(state.projectPairs);
-        await selectProjectPair(0);
+        noWarningsElement.style.display = "none";
+        warningsContainer.style.display = "none";
+        if (state.projectPairs.length === 0) {
+            projectPairsContainer.style.display = "none";
+            noResultsElement.style.display = "block";
+        }
+        else {
+            noResultsElement.style.display = "none";
+            projectPairsContainer.style.display = "flex";
+            displayProjectPairs(state.projectPairs);
+            await selectProjectPair(0);
+        }
     }
 }
+
+/* PROJECT PAIRS ------------------------------------------------------------ */
 
 /**
  * Updates the sidebar with all the project pairs.
@@ -435,6 +472,39 @@ function scrollToLocation(startByte, endByte, pane) {
         spansToSelect[0].scrollIntoView();
     }
 }
+
+/* WARNINGS ----------------------------------------------------------------- */
+
+function displayWarnings(warnings) {
+    const warningsTableBody = document.getElementById("warnings-tbody");
+
+    const children = Array.from(warningsTableBody.childNodes);
+    for (const child of children) {
+        if (child.id !== "warnings-tbody-header") {
+            warningsTableBody.removeChild(child);
+        }
+    }
+
+    for (const warning of warnings) {
+        const rowElement = document.createElement("tr");
+
+        const typeCell = document.createElement("td");
+        typeCell.innerText = warning.warn_type;
+        rowElement.appendChild(typeCell);
+
+        const fileCell = document.createElement("td");
+        fileCell.innerText = warning.file;
+        rowElement.appendChild(fileCell);
+
+        const messageCell = document.createElement("td");
+        messageCell.innerText = warning.message;
+        rowElement.appendChild(messageCell);
+
+        warningsTableBody.appendChild(rowElement);
+    }
+}
+
+/* HELPERS ------------------------------------------------------------------ */
 
 /**
  * Removes all children of the given element.

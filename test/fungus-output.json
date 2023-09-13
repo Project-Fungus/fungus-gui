@@ -2,6 +2,18 @@
   "metadata": {
     "num_project_pairs": 2
   },
+  "warnings": [
+    {
+      "file": ".DS_Store",
+      "message": "stream did not contain valid UTF-8",
+      "warn_type": "Input"
+    },
+    {
+      "file": "Project 1/short.s",
+      "message": "File could not be fingerprinted because it contains 36 tokens, which is less than the noise threshold of 50.",
+      "warn_type": "Fingerprint"
+    }
+  ],
   "project_pairs": [
     {
       "project1": "Project 1",

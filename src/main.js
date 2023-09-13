@@ -27,7 +27,7 @@ function createWindow() {
         show: false
     });
     window.maximize();
-    window.loadFile(path.join(__dirname, "project-pairs.html"));
+    window.loadFile(path.join(__dirname, "index.html"));
     window.show();
 }
 

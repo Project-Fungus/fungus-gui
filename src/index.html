@@ -6,19 +6,22 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">
     <title>FUNGUS</title>
-    <script src="./project-pairs.js"></script>
-    <link href="./global.css" rel="stylesheet" />
-    <link href="./project-pairs.css" rel="stylesheet" />
+    <script src="./index.js"></script>
+    <link href="./index.css" rel="stylesheet" />
 </head>
 
-<!-- TODO: Find some way to display warnings? -->
-
 <body>
+    <header>
+        <span id="current-file-msg">Open a file to get started.</span>
+        <select id="select-view">
+            <option value="project-pairs">Project Pairs</option>
+            <option value="warnings">Warnings</option>
+        </select>
+    </header>
+    <hr />
     <main>
-        <p id="current-file-msg">Open a file to get started.</p>
-        <hr />
         <p id="no-results-msg">No matches were found.</p>
-        <div id="outer-container">
+        <div id="outer-project-pair-container">
             <div id="project-pair-list" class="vertical-container">
                 <!-- Project pairs go here. For example: -->
                 <!-- <div id="project-pair0" class="project-pair">
@@ -70,6 +73,25 @@ int main() {
                     </div>
                 </div>
             </div>
+        </div>
+
+        <p id="no-warnings-msg">There are no warnings to show.</p>
+        <div id="warnings-container">
+            <table id="warnings-table">
+                <tbody id="warnings-tbody">
+                    <tr id="warnings-tbody-header">
+                        <th>Type</th>
+                        <th>File</th>
+                        <th>Message</th>
+                    </tr>
+                    <!-- Warnings go here. For example: -->
+                    <!-- <tr>
+                        <td>Input</td>
+                        <td>Project 1/.DS_Store</td>
+                        <td>stream did not contain valid UTF-8</td>
+                    </tr> -->
+                </tbody>
+            </table>
         </div>
     </main>
 </body>
