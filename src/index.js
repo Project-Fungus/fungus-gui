@@ -103,19 +103,15 @@ function displayProjectPairs(projectPairs) {
             () => selectProjectPair(i, projectPairElement)
         );
 
-        const project1NameElement = document.createElement("span");
+        const project1NameElement = document.createElement("p");
         project1NameElement.innerText = projectPairs[i].project1;
         projectPairElement.appendChild(project1NameElement);
 
-        projectPairElement.appendChild(document.createElement("br"));
-
-        const project2NameElement = document.createElement("span");
+        const project2NameElement = document.createElement("p");
         project2NameElement.innerText = projectPairs[i].project2;
         projectPairElement.appendChild(project2NameElement);
 
-        projectPairElement.appendChild(document.createElement("br"));
-
-        const numMatchesElement = document.createElement("span");
+        const numMatchesElement = document.createElement("p");
         const numMatches = projectPairs[i].num_matches;
         const matchOrMatches = numMatches === 1 ? "match" : "matches";
         numMatchesElement.innerText = `${numMatches} ${matchOrMatches}`;

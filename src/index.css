@@ -146,6 +146,15 @@ html {
 .project-pair {
     border: 1px solid darkgrey;
     padding: 0.5em;
+    overflow-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.4em;
+}
+
+.project-pair p {
+    margin: 0;
 }
 
 .current-project-pair {
@@ -154,6 +163,11 @@ html {
 
 .project-pair:hover {
     background-color: darkgrey;
+}
+
+#project1-filename,
+#project2-filename {
+    overflow-wrap: break-word;
 }
 
 .unselected-highlighted {

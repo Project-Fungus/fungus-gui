@@ -119,7 +119,7 @@
     },
     {
       "project1": "Project 1",
-      "project2": "Project 3",
+      "project2": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss",
       "num_matches": 1,
       "matches": [
         {
@@ -134,14 +134,14 @@
           ],
           "project2_occurrences": [
             {
-              "file": "Project 3/nonexistent-file.s",
+              "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/An incredibly-frustratingly-unfairly long subdirectory name why would the student do this didnt they read the instructions nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo/nonexistent-file.s",
               "span": {
                 "start": 0,
                 "end": 42
               }
             },
             {
-              "file": "Project 3/file.s",
+              "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/Yet another ridiculously long subdirectory name why would the student do this come onnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/file.s",
               "span": {
                 "start": 0,
                 "end": 245
