@@ -116,7 +116,9 @@ function displayProjectPairs(projectPairs) {
         projectPairElement.appendChild(document.createElement("br"));
 
         const numMatchesElement = document.createElement("span");
-        numMatchesElement.innerText = `${projectPairs[i].num_matches} matches`;
+        const numMatches = projectPairs[i].num_matches;
+        const matchOrMatches = numMatches === 1 ? "match" : "matches";
+        numMatchesElement.innerText = `${numMatches} ${matchOrMatches}`;
         projectPairElement.appendChild(numMatchesElement);
 
         projectPairsContainer.appendChild(projectPairElement);
