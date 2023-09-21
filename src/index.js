@@ -468,7 +468,15 @@ function scrollToLocation(startByte, endByte, pane) {
     spansToSelect.forEach((s) => s.className = "selected-highlighted");
 
     if (spansToSelect.length >= 1) {
-        spansToSelect[0].scrollIntoView();
+        // Chromium can't smoothly scroll multiple elements into view at the
+        // same time :( But somehow scrollTo works
+        const spanToScroll = spansToSelect[0];
+        // The code block is not a "positioned" element, so
+        // spanToScroll.offsetParent === codeBlock.offsetParent === body.
+        // But we want the offset of the span compared to the code block, which
+        // is why we subtract the code block's offset.
+        const topOffset = spanToScroll.offsetTop - codeBlock.offsetTop;
+        codeBlock.scrollTo(0, topOffset);
     }
 }
 
