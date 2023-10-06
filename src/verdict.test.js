@@ -61,7 +61,8 @@ test("Contradictory verdicts: accept then reject", () => {
     const location3 = { file: "student3.s", startByte: 1000, endByte: 1100 };
     r.accept(location1, location2);
     r.accept(location2, location3);
-    expect(() => r.reject(location1, location3)).toThrow("Contradictory verdict.");
+    expect(() => r.reject(location1, location3))
+        .toThrow("Contradictory verdict.");
 });
 
 test("Contradictory verdicts: reject then accept", () => {
@@ -71,5 +72,6 @@ test("Contradictory verdicts: reject then accept", () => {
     const location3 = { file: "student3.s", startByte: 1000, endByte: 1100 };
     r.accept(location1, location2);
     r.reject(location2, location3);
-    expect(() => r.accept(location1, location3)).toThrow("Contradictory verdict.");
+    expect(() => r.accept(location1, location3))
+        .toThrow("Contradictory verdict.");
 });
