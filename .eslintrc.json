@@ -28,6 +28,9 @@
         ],
         "max-len": [
             "warn"
+        ],
+        "no-trailing-spaces": [
+            "warn"
         ]
     }
 }
