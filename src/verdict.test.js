@@ -54,6 +54,69 @@ test("Transitivity: a != b != c", () => {
     expect(r.getVerdict(locationA, locationC)).toStrictEqual("unknown");
 });
 
+test("Transitivity: (a = b) = (c = d)", () => {
+    const r = new CodeEquivalenceRelation();
+    const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
+    const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
+    const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
+    const location4 = { file: "file4.s", startByte: 0, endByte: 42 };
+
+    r.accept(location1, location2);
+    r.accept(location3, location4);
+    r.accept(location1, location3);
+
+    expect(r.getVerdict(location1, location3)).toStrictEqual("accept");
+    expect(r.getVerdict(location1, location4)).toStrictEqual("accept");
+    expect(r.getVerdict(location2, location3)).toStrictEqual("accept");
+    expect(r.getVerdict(location2, location4)).toStrictEqual("accept");
+    expect(r.getVerdict(location3, location4)).toStrictEqual("accept");
+});
+
+test("Transitivity: (a = b) != (c = d)", () => {
+    const r = new CodeEquivalenceRelation();
+    const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
+    const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
+    const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
+    const location4 = { file: "file4.s", startByte: 0, endByte: 42 };
+
+    r.accept(location1, location2);
+    r.accept(location3, location4);
+    r.reject(location1, location3);
+
+    expect(r.getVerdict(location1, location2)).toStrictEqual("accept");
+    expect(r.getVerdict(location3, location4)).toStrictEqual("accept");
+    expect(r.getVerdict(location1, location3)).toStrictEqual("reject");
+    expect(r.getVerdict(location1, location4)).toStrictEqual("reject");
+    expect(r.getVerdict(location2, location3)).toStrictEqual("reject");
+    expect(r.getVerdict(location2, location4)).toStrictEqual("reject");
+});
+
+test("Duplicate accept", () => {
+    const r = new CodeEquivalenceRelation();
+    const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
+    const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
+    const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
+
+    r.accept(location1, location2);
+    r.accept(location1, location3);
+    r.accept(location2, location3);
+
+    expect(r.getVerdict(location1, location2)).toStrictEqual("accept");
+    expect(r.getVerdict(location1, location3)).toStrictEqual("accept");
+    expect(r.getVerdict(location2, location3)).toStrictEqual("accept");
+});
+
+test("Verdict for unknown location", () => {
+    const r = new CodeEquivalenceRelation();
+    const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
+    const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
+    const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
+
+    r.accept(location1, location2);
+
+    expect(r.getVerdict(location1, location3)).toStrictEqual("unknown");
+});
+
 test("Contradictory verdicts: accept then reject", () => {
     const r = new CodeEquivalenceRelation();
     const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
@@ -74,4 +137,17 @@ test("Contradictory verdicts: reject then accept", () => {
     r.reject(location2, location3);
     expect(() => r.accept(location1, location3))
         .toThrow("Contradictory verdict.");
+});
+
+test("Serialize and then deserialize", () => {
+    const r = new CodeEquivalenceRelation();
+    const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
+    const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
+    const location3 = { file: "student3.s", startByte: 1000, endByte: 1100 };
+    r.accept(location1, location2);
+    r.reject(location2, location3);
+    const serialized = r.serialize();
+    const deserializedRelation = CodeEquivalenceRelation.deserialize(
+        serialized);
+    expect(deserializedRelation).toStrictEqual(r);
 });
