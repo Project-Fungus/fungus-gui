@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A frontend to the FUNGUS plagiarism detection tool.",
   "main": "./src/main.js",
-  "type": "module",
   "scripts": {
     "start": "electron .",
     "lint": "npx eslint .",

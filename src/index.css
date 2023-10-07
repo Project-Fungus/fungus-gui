@@ -81,6 +81,12 @@ main {
     box-sizing: border-box;
 }
 
+#match-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 #project-code-container {
     flex-grow: 1;
     min-height: 0;
@@ -138,6 +144,10 @@ main {
 }
 
 /* END LAYOUT --------------------------------------------------------------- */
+
+.hide {
+    display: none !important;
+}
 
 html {
     font-family: Calibri, sans-serif;
@@ -199,6 +209,27 @@ pre {
     font-size: medium;
 }
 
+#accept-match-btn {
+    color: green;
+    border: 1px solid green;
+    border-radius: 5px;
+}
+
+#reject-match-btn {
+    color: red;
+    border: 1px solid red;
+    border-radius: 5px;
+}
+
+#accept-match-btn:hover,
+#reject-match-btn:hover {
+    background-color: darkgrey;
+}
+
+#accept-match-btn:active,
+#reject-match-btn:active {
+    background-color: inherit;
+}
 
 table {
     width: 100%;

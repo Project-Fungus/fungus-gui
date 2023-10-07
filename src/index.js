@@ -7,6 +7,16 @@ class GuiState {
         this.currentMatchIndex = 0;
         this.currentMatch = null;
     }
+
+    get project1Occurrence() {
+        return this.currentMatch.project1_occurrences[
+            this.currentProject1OccurrenceIndex];
+    }
+
+    get project2Occurrence() {
+        return this.currentMatch.project2_occurrences[
+            this.currentProject2OccurrenceIndex];
+    }
 }
 
 let state = new GuiState();
@@ -19,6 +29,10 @@ window.addEventListener("DOMContentLoaded", function () {
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
         "click", selectNextMatch);
+    document.getElementById("accept-match-btn").addEventListener(
+        "click", acceptMatch);
+    document.getElementById("reject-match-btn").addEventListener(
+        "click", rejectMatch);
 });
 
 /**
@@ -185,9 +199,11 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
         `Match ${matchIndex + 1}/${totalNumMatches}`;
 
     await Promise.all([
-        showCodeLocation(project1OccurrenceIndex, 1),
-        showCodeLocation(project2OccurrenceIndex, 2)
+        showCodeLocation(project1OccurrenceIndex, 1, false),
+        showCodeLocation(project2OccurrenceIndex, 2, false)
     ]);
+
+    showMatchVerdict();
 }
 
 async function selectPreviousMatch() {
@@ -198,7 +214,7 @@ async function selectNextMatch() {
     await selectMatch(state.currentMatchIndex + 1);
 }
 
-async function showCodeLocation(occurrenceIndex, pane) {
+async function showCodeLocation(occurrenceIndex, pane, showVerdict = true) {
     const occurrenceList = pane === 1
         ? state.currentMatch.project1_occurrences
         : state.currentMatch.project2_occurrences;
@@ -241,6 +257,10 @@ async function showCodeLocation(occurrenceIndex, pane) {
     // occurrences may hide the highlighted code.
     scrollToLocation(
         currentOccurrence.span.start, currentOccurrence.span.end, pane);
+
+    if (showVerdict) {
+        showMatchVerdict();
+    }
 }
 
 async function loadAndDisplayCode(projectsDirectoryPath, filePath,
@@ -476,6 +496,71 @@ function scrollToLocation(startByte, endByte, pane) {
         const topOffset = spanToScroll.offsetTop - codeBlock.offsetTop;
         codeBlock.scrollTo(0, topOffset);
     }
+}
+
+function showMatchVerdict() {
+    const acceptButton = document.getElementById("accept-match-btn");
+    const rejectButton = document.getElementById("reject-match-btn");
+    const verdictText = document.getElementById("match-verdict");
+
+    const location1 = {
+        file: state.project1Occurrence.file,
+        startByte: state.project1Occurrence.span.start,
+        endByte: state.project1Occurrence.span.end
+    };
+    const location2 = {
+        file: state.project2Occurrence.file,
+        startByte: state.project2Occurrence.span.start,
+        endByte: state.project2Occurrence.span.end
+    };
+    const verdict = window.electronApi.getVerdict(location1, location2);
+    if (verdict === "accept") {
+        verdictText.innerHTML = "Accepted &#10004;";
+        verdictText.className = "show";
+        acceptButton.className = "hide";
+        rejectButton.className = "hide";
+    }
+    else if (verdict === "reject") {
+        verdictText.innerHTML = "Rejected &#10008;";
+        verdictText.className = "show";
+        acceptButton.className = "hide";
+        rejectButton.className = "hide";
+    }
+    else {
+        verdictText.className = "hide";
+        acceptButton.className = "show";
+        rejectButton.className = "show";
+    }
+}
+
+async function acceptMatch() {
+    const location1 = {
+        file: state.project1Occurrence.file,
+        startByte: state.project1Occurrence.span.start,
+        endByte: state.project1Occurrence.span.end
+    };
+    const location2 = {
+        file: state.project2Occurrence.file,
+        startByte: state.project2Occurrence.span.start,
+        endByte: state.project2Occurrence.span.end
+    };
+    await window.electronApi.acceptMatch(location1, location2);
+    showMatchVerdict();
+}
+
+async function rejectMatch() {
+    const location1 = {
+        file: state.project1Occurrence.file,
+        startByte: state.project1Occurrence.span.start,
+        endByte: state.project1Occurrence.span.end
+    };
+    const location2 = {
+        file: state.project2Occurrence.file,
+        startByte: state.project2Occurrence.span.start,
+        endByte: state.project2Occurrence.span.end
+    };
+    await window.electronApi.rejectMatch(location1, location2);
+    showMatchVerdict();
 }
 
 /* WARNINGS ----------------------------------------------------------------- */
