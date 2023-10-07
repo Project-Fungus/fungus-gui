@@ -3,9 +3,39 @@ class GuiState {
         this.projectsDirectoryPath = projectsDirectoryPath || "";
         this.projectPairs = projectPairs || [];
         this.warnings = warnings || [];
-        this.currentProjectPair = 0;
+        this.currentProjectPairIndex = 0;
         this.currentMatchIndex = 0;
-        this.currentMatch = null;
+        this.currentProject1OccurrenceIndex = 0;
+        this.currentProject2OccurrenceIndex = 0;
+    }
+
+    // TODO: Use setters to ensure valid indices?
+
+    /**
+     * Update the indices to all be within their allowed ranges.
+     */
+    clampIndices() {
+        if (this.projectPairs.length === 0) {
+            return;
+        }
+        this.currentProjectPairIndex = _clamp(this.currentProjectPairIndex,
+            0, this.projectPairs.length - 1);
+        this.currentMatchIndex = _clamp(this.currentMatchIndex,
+            0, this.currentProjectPair.matches.length - 1);
+        this.currentProject1OccurrenceIndex = _clamp(
+            this.currentProject1OccurrenceIndex,
+            0, this.currentMatch.project1_occurrences.length - 1);
+        this.currentProject2OccurrenceIndex = _clamp(
+            this.currentProject2OccurrenceIndex,
+            0, this.currentMatch.project2_occurrences.length - 1);
+    }
+
+    get currentProjectPair() {
+        return this.projectPairs[this.currentProjectPairIndex];
+    }
+
+    get currentMatch() {
+        return this.currentProjectPair.matches[this.currentMatchIndex];
     }
 
     get project1Occurrence() {
@@ -16,6 +46,18 @@ class GuiState {
     get project2Occurrence() {
         return this.currentMatch.project2_occurrences[
             this.currentProject2OccurrenceIndex];
+    }
+}
+
+function _clamp(x, min, max) {
+    if (x < min) {
+        return min;
+    }
+    else if (x > max) {
+        return max;
+    }
+    else {
+        return x;
     }
 }
 
@@ -85,20 +127,32 @@ async function showView() {
     else {
         noWarningsElement.style.display = "none";
         warningsContainer.style.display = "none";
-        if (state.projectPairs.length === 0) {
-            projectPairsContainer.style.display = "none";
-            noResultsElement.style.display = "block";
-        }
-        else {
-            noResultsElement.style.display = "none";
-            projectPairsContainer.style.display = "flex";
-            displayProjectPairs(state.projectPairs);
-            await selectProjectPair(0);
-        }
+        await showProjectPairView();
     }
 }
 
 /* PROJECT PAIRS ------------------------------------------------------------ */
+
+async function showProjectPairView() {
+    state.projectPairs = window.electronApi.filterProjectPairsByVerdict(
+        state.projectPairs);
+
+    // TODO: Avoid this duplication
+    const noResultsElement = document.getElementById("no-results-msg");
+    const projectPairsContainer
+        = document.getElementById("outer-project-pair-container");
+    if (state.projectPairs.length === 0) {
+        projectPairsContainer.style.display = "none";
+        noResultsElement.style.display = "block";
+    }
+    else {
+        noResultsElement.style.display = "none";
+        projectPairsContainer.style.display = "flex";
+        state.clampIndices();
+        displayProjectPairs(state.projectPairs);
+        await selectProjectPair(state.currentProjectPairIndex);
+    }
+}
 
 /**
  * Updates the sidebar with all the project pairs.
@@ -126,9 +180,10 @@ function displayProjectPairs(projectPairs) {
         projectPairElement.appendChild(project2NameElement);
 
         const numMatchesElement = document.createElement("p");
-        const numMatches = projectPairs[i].num_matches;
-        const matchOrMatches = numMatches === 1 ? "match" : "matches";
-        numMatchesElement.innerText = `${numMatches} ${matchOrMatches}`;
+        const numUnconfirmedMatches = projectPairs[i].matches.length;
+        const totalNumMatches = projectPairs[i].total_num_matches;
+        numMatchesElement.innerText =
+            `Matches: ${numUnconfirmedMatches}/${totalNumMatches} unconfirmed`;
         projectPairElement.appendChild(numMatchesElement);
 
         projectPairsContainer.appendChild(projectPairElement);
@@ -142,10 +197,11 @@ function displayProjectPairs(projectPairs) {
  * @param {number} idx Index of the project pair in the list of project pairs.
  */
 async function selectProjectPair(idx) {
+    // TODO: Make this and other similar checks modify the index instead
     if (idx < 0 || idx >= state.projectPairs.length) {
         return;
     }
-    state.currentProjectPair = state.projectPairs[idx];
+    state.currentProjectPairIndex = idx;
 
     const element = document.getElementById(`project-pair${idx}`);
 
@@ -177,13 +233,11 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
     if (state.currentMatchIndex === matchIndex && !isProject1OccurrenceGiven) {
         project1OccurrenceIndex = state.currentProject1OccurrenceIndex;
     }
-    project1OccurrenceIndex = project1OccurrenceIndex || 0;
     const isProject2OccurrenceGiven = project2OccurrenceIndex
         || project2OccurrenceIndex === 0;
     if (state.currentMatchIndex === matchIndex && !isProject2OccurrenceGiven) {
         project2OccurrenceIndex = state.currentProject2OccurrenceIndex;
     }
-    project2OccurrenceIndex = project2OccurrenceIndex || 0;
 
     const isValidIndex =
         matchIndex >= 0
@@ -192,7 +246,6 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
         return;
     }
     state.currentMatchIndex = matchIndex;
-    state.currentMatch = state.currentProjectPair.matches[matchIndex];
 
     const totalNumMatches = state.currentProjectPair.matches.length;
     document.getElementById("match-count").innerText =
@@ -534,6 +587,7 @@ function showMatchVerdict() {
 }
 
 async function acceptMatch() {
+    // TODO: Ask for confirmation first
     const location1 = {
         file: state.project1Occurrence.file,
         startByte: state.project1Occurrence.span.start,
@@ -545,10 +599,11 @@ async function acceptMatch() {
         endByte: state.project2Occurrence.span.end
     };
     await window.electronApi.acceptMatch(location1, location2);
-    showMatchVerdict();
+    await showProjectPairView();
 }
 
 async function rejectMatch() {
+    // TODO: Ask for confirmation first
     const location1 = {
         file: state.project1Occurrence.file,
         startByte: state.project1Occurrence.span.start,
@@ -560,7 +615,7 @@ async function rejectMatch() {
         endByte: state.project2Occurrence.span.end
     };
     await window.electronApi.rejectMatch(location1, location2);
-    showMatchVerdict();
+    await showProjectPairView();
 }
 
 /* WARNINGS ----------------------------------------------------------------- */
