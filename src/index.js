@@ -345,14 +345,23 @@ function showMatchVerdict() {
 }
 
 async function acceptMatch() {
-    // TODO: Ask for confirmation first
+    const shouldAccept = await window.electronApi.askToConfirm(
+        "Are you sure you want to mark the current match as plagiarism?");
+    if (!shouldAccept) {
+        return;
+    }
     await window.electronApi.acceptMatch(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();
 }
 
 async function rejectMatch() {
-    // TODO: Ask for confirmation first
+    const shouldAccept = await window.electronApi.askToConfirm(
+        "Are you sure you want to mark the current match as *not* being "
+        + "plagiarism?");
+    if (!shouldAccept) {
+        return;
+    }
     await window.electronApi.rejectMatch(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();

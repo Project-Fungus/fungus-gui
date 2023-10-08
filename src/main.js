@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 
@@ -9,6 +9,10 @@ app.whenReady().then(() => {
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0)
             createWindow();
+    });
+    ipcMain.handle("dialog:showMessageBox", async (event, options) => {
+        const browserWindow = BrowserWindow.fromWebContents(event.sender);
+        await dialog.showMessageBox(browserWindow, options)
     });
 });
 
