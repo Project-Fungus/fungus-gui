@@ -722,7 +722,10 @@ function _convertProjectPairs(projectPairsFromFile, fileName) {
             }
         }
     }
-    return { projectPairs, warnings: allWarnings };
+    return {
+        projectPairs: projectPairs.sort(_compareProjectPairs),
+        warnings: allWarnings
+    };
 }
 
 /**
@@ -769,7 +772,10 @@ function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
             }
         }
     }
-    return { matches, warnings: allWarnings };
+    return {
+        matches: matches.sort(_compareMatches),
+        warnings: allWarnings
+    };
 }
 
 /**
@@ -819,5 +825,23 @@ function _convertLocations(occurrences, fileName, projectPairIndex,
                 new CodeLocation(occ.file, occ.span.start, occ.span.end));
         }
     }
-    return { locations, warnings };
+    return {
+        locations: locations.sort(_compareLocations),
+        warnings
+    };
+}
+
+function _compareProjectPairs(projectPair1, projectPair2) {
+    return projectPair2.totalNumMatches - projectPair1.totalNumMatches;
+}
+
+function _compareMatches(match1, match2) {
+    return _compareLocations(match1.location1, match2.location1)
+        || _compareLocations(match1.location2, match2.location2);
+}
+
+function _compareLocations(location1, location2) {
+    return (("" + location1.file).localeCompare(location2.file))
+        || (location1.startByte - location2.startByte)
+        || (location1.endByte - location2.endByte);
 }
