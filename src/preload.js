@@ -5,8 +5,6 @@ const { CodeEquivalenceRelation } = require("./verdict");
 
 const codeEquivalenceRelation = new CodeEquivalenceRelation();
 
-console.log(dialog);
-
 contextBridge.exposeInMainWorld("electronApi", {
     onOpenFile: (callback) => ipcRenderer.on("open-file", callback),
     readFile,

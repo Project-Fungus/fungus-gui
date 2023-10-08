@@ -12,7 +12,7 @@ app.whenReady().then(() => {
     });
     ipcMain.handle("dialog:showMessageBox", async (event, options) => {
         const browserWindow = BrowserWindow.fromWebContents(event.sender);
-        await dialog.showMessageBox(browserWindow, options)
+        return await dialog.showMessageBox(browserWindow, options)
     });
 });
 
