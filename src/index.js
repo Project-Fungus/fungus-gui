@@ -88,8 +88,6 @@ class GuiState {
         this.currentMatchIndex = 0;
     }
 
-    // TODO: Use setters to ensure valid indices?
-
     /**
      * Update the indices to all be within their allowed ranges.
      */
@@ -257,7 +255,6 @@ function displayProjectPairs(projectPairs) {
  * @param {number} idx Index of the project pair in the list of project pairs.
  */
 async function selectProjectPair(idx) {
-    // TODO: Make this and other similar checks modify the index instead?
     if (idx < 0 || idx >= state.projectPairs.length) {
         return;
     }
@@ -292,8 +289,6 @@ async function selectProjectPair(idx) {
  *                                         2 to show at first.
  */
 async function selectMatch(matchIndex) {
-    // TODO: Modify the index instead of just returning? Then
-    // select[Previous/Next]Match might become more complicated :(
     const isValidIndex =
         matchIndex >= 0
         && matchIndex < state.currentProjectPair.matches.length;
