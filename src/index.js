@@ -1,12 +1,91 @@
+class ProjectPair {
+    /**
+     * @param {string} project1Name
+     * @param {string} project2Name
+     * @param {[Match]} matches
+     * @param {number} totalNumMatches
+     */
+    constructor(project1Name, project2Name, matches, totalNumMatches) {
+        this.project1Name = String(project1Name);
+        this.project2Name = String(project2Name);
+        this.matches = matches;
+        this.totalNumMatches = totalNumMatches;
+    }
+}
+
+class Match {
+    /**
+     * @param {CodeLocation} location1
+     * @param {CodeLocation} location2
+     */
+    constructor(location1, location2) {
+        this.location1 = location1;
+        this.location2 = location2;
+    }
+}
+
+class CodeLocation {
+    /**
+     * @param {string} file
+     * @param {number} startByte
+     * @param {number} endByte
+     */
+    constructor(file, startByte, endByte) {
+        this.file = file;
+        this.startByte = startByte;
+        this.endByte = endByte;
+    }
+}
+
+class Warning {
+    /**
+     * @param {string} warnType
+     * @param {string} file
+     * @param {string} message
+     */
+    constructor(warnType, file, message) {
+        this._warnType = warnType;
+        this._file = file;
+        this._message = message;
+    }
+
+    /**
+     * @type string
+     */
+    get warnType() {
+        return this._warnType;
+    }
+
+    /**
+     * @type string
+     */
+    get file() {
+        return this._file;
+    }
+
+    /**
+     * @type string
+     */
+    get message() {
+        return this._message;
+    }
+}
+
 class GuiState {
-    constructor(projectsDirectoryPath, projectPairs, warnings) {
+    constructor(fileName, projectsDirectoryPath, projectPairs, warnings) {
         this.projectsDirectoryPath = projectsDirectoryPath || "";
-        this.projectPairs = projectPairs || [];
-        this.warnings = warnings || [];
+        this.warnings = (warnings || []).map((w) =>
+            new Warning(w.warn_type, w.file, w.message));
+        projectPairs = projectPairs || [];
+        const {
+            projectPairs: convertedProjectPairs,
+            warnings: conversionWarnings
+        } = _convertProjectPairs(projectPairs, fileName);
+        this.projectPairs = convertedProjectPairs;
+        this.warnings = this.warnings.concat(conversionWarnings);
+
         this.currentProjectPairIndex = 0;
         this.currentMatchIndex = 0;
-        this.currentProject1OccurrenceIndex = 0;
-        this.currentProject2OccurrenceIndex = 0;
     }
 
     // TODO: Use setters to ensure valid indices?
@@ -22,42 +101,20 @@ class GuiState {
             0, this.projectPairs.length - 1);
         this.currentMatchIndex = _clamp(this.currentMatchIndex,
             0, this.currentProjectPair.matches.length - 1);
-        this.currentProject1OccurrenceIndex = _clamp(
-            this.currentProject1OccurrenceIndex,
-            0, this.currentMatch.project1_occurrences.length - 1);
-        this.currentProject2OccurrenceIndex = _clamp(
-            this.currentProject2OccurrenceIndex,
-            0, this.currentMatch.project2_occurrences.length - 1);
     }
 
+    /**
+     * @returns {ProjectPair}
+     */
     get currentProjectPair() {
         return this.projectPairs[this.currentProjectPairIndex];
     }
 
+    /**
+     * @returns {Match}
+     */
     get currentMatch() {
         return this.currentProjectPair.matches[this.currentMatchIndex];
-    }
-
-    get project1Occurrence() {
-        return this.currentMatch.project1_occurrences[
-            this.currentProject1OccurrenceIndex];
-    }
-
-    get project2Occurrence() {
-        return this.currentMatch.project2_occurrences[
-            this.currentProject2OccurrenceIndex];
-    }
-}
-
-function _clamp(x, min, max) {
-    if (x < min) {
-        return min;
-    }
-    else if (x > max) {
-        return max;
-    }
-    else {
-        return x;
     }
 }
 
@@ -81,7 +138,8 @@ window.addEventListener("DOMContentLoaded", function () {
  * Displays a new plagiarism results file.
  *
  * @param {object} file
- * @param {string} file.filePath Path to the plagiarism results file.
+ * @param {string} file.filePath Full path to the plagiarism results file.
+ * @param {string} file.fileName Name of the plagiarism results file.
  * @param {object} file.fileContents Contents of the plagiarism results file.
  * @param {string} file.directoryPath Path to the directory of student projects.
  */
@@ -94,6 +152,7 @@ async function openFile(file) {
     }
 
     state = new GuiState(
+        file.fileName,
         file.directoryPath,
         file.fileContents.project_pairs,
         file.fileContents.warnings);
@@ -104,6 +163,8 @@ async function openFile(file) {
     await showView();
 }
 
+// Call this function when switching views (e.g., from project pairs view to
+// warnings view).
 async function showView() {
     const noResultsElement = document.getElementById("no-results-msg");
     const projectPairsContainer
@@ -134,8 +195,7 @@ async function showView() {
 /* PROJECT PAIRS ------------------------------------------------------------ */
 
 async function showProjectPairView() {
-    state.projectPairs = window.electronApi.filterProjectPairsByVerdict(
-        state.projectPairs);
+    state.projectPairs = _filterProjectPairsByVerdict(state.projectPairs);
 
     // TODO: Avoid this duplication
     const noResultsElement = document.getElementById("no-results-msg");
@@ -172,16 +232,16 @@ function displayProjectPairs(projectPairs) {
         );
 
         const project1NameElement = document.createElement("p");
-        project1NameElement.innerText = projectPairs[i].project1;
+        project1NameElement.innerText = projectPairs[i].project1Name;
         projectPairElement.appendChild(project1NameElement);
 
         const project2NameElement = document.createElement("p");
-        project2NameElement.innerText = projectPairs[i].project2;
+        project2NameElement.innerText = projectPairs[i].project2Name;
         projectPairElement.appendChild(project2NameElement);
 
         const numMatchesElement = document.createElement("p");
         const numUnconfirmedMatches = projectPairs[i].matches.length;
-        const totalNumMatches = projectPairs[i].total_num_matches;
+        const totalNumMatches = projectPairs[i].totalNumMatches;
         numMatchesElement.innerText =
             `Matches: ${numUnconfirmedMatches}/${totalNumMatches} unconfirmed`;
         projectPairElement.appendChild(numMatchesElement);
@@ -197,10 +257,11 @@ function displayProjectPairs(projectPairs) {
  * @param {number} idx Index of the project pair in the list of project pairs.
  */
 async function selectProjectPair(idx) {
-    // TODO: Make this and other similar checks modify the index instead
+    // TODO: Make this and other similar checks modify the index instead?
     if (idx < 0 || idx >= state.projectPairs.length) {
         return;
     }
+    const previousProjectPairIndex = state.currentProjectPairIndex;
     state.currentProjectPairIndex = idx;
 
     const element = document.getElementById(`project-pair${idx}`);
@@ -212,7 +273,12 @@ async function selectProjectPair(idx) {
     }
     element.classList.add("current-project-pair");
 
-    await selectMatch(0);
+    if (state.currentProjectPairIndex == previousProjectPairIndex) {
+        await selectMatch(state.currentMatchIndex);
+    }
+    else {
+        await selectMatch(0);
+    }
 }
 
 /**
@@ -225,20 +291,9 @@ async function selectProjectPair(idx) {
  * @param {number} project2OccurrenceIndex Index of the occurrence from project
  *                                         2 to show at first.
  */
-async function selectMatch(matchIndex, project1OccurrenceIndex,
-    project2OccurrenceIndex) {
-
-    const isProject1OccurrenceGiven = project1OccurrenceIndex
-        || project1OccurrenceIndex === 0;
-    if (state.currentMatchIndex === matchIndex && !isProject1OccurrenceGiven) {
-        project1OccurrenceIndex = state.currentProject1OccurrenceIndex;
-    }
-    const isProject2OccurrenceGiven = project2OccurrenceIndex
-        || project2OccurrenceIndex === 0;
-    if (state.currentMatchIndex === matchIndex && !isProject2OccurrenceGiven) {
-        project2OccurrenceIndex = state.currentProject2OccurrenceIndex;
-    }
-
+async function selectMatch(matchIndex) {
+    // TODO: Modify the index instead of just returning? Then
+    // select[Previous/Next]Match might become more complicated :(
     const isValidIndex =
         matchIndex >= 0
         && matchIndex < state.currentProjectPair.matches.length;
@@ -251,11 +306,7 @@ async function selectMatch(matchIndex, project1OccurrenceIndex,
     document.getElementById("match-count").innerText =
         `Match ${matchIndex + 1}/${totalNumMatches}`;
 
-    await Promise.all([
-        showCodeLocation(project1OccurrenceIndex, 1, false),
-        showCodeLocation(project2OccurrenceIndex, 2, false)
-    ]);
-
+    await Promise.all([_showCodeLocation(1), _showCodeLocation(2)]);
     showMatchVerdict();
 }
 
@@ -267,56 +318,74 @@ async function selectNextMatch() {
     await selectMatch(state.currentMatchIndex + 1);
 }
 
-async function showCodeLocation(occurrenceIndex, pane, showVerdict = true) {
-    const occurrenceList = pane === 1
-        ? state.currentMatch.project1_occurrences
-        : state.currentMatch.project2_occurrences;
-    if (occurrenceIndex < 0 || occurrenceIndex >= occurrenceList.length) {
-        return;
+function showMatchVerdict() {
+    const acceptButton = document.getElementById("accept-match-btn");
+    const rejectButton = document.getElementById("reject-match-btn");
+    const verdictText = document.getElementById("match-verdict");
+
+    const verdict = window.electronApi.getVerdict(
+        state.currentMatch.location1, state.currentMatch.location2);
+    if (verdict === "accept") {
+        verdictText.innerHTML = "Accepted &#10004;";
+        verdictText.className = "show";
+        acceptButton.className = "hide";
+        rejectButton.className = "hide";
     }
-    const currentOccurrence = occurrenceList[occurrenceIndex];
-    if (pane === 1) {
-        state.currentProject1OccurrenceIndex = occurrenceIndex;
+    else if (verdict === "reject") {
+        verdictText.innerHTML = "Rejected &#10008;";
+        verdictText.className = "show";
+        acceptButton.className = "hide";
+        rejectButton.className = "hide";
     }
     else {
-        state.currentProject2OccurrenceIndex = occurrenceIndex;
-    }
-
-    // Only highlight code that's part of a match in the current project pair
-    // and file
-    const rangesToHighlight = state.currentProjectPair.matches.flatMap(
-        (m, im) => {
-            const occurrencesInThisMatch = pane === 1
-                ? m.project1_occurrences
-                : m.project2_occurrences;
-            return occurrencesInThisMatch
-                .map((occ, iocc) => ({ data: occ, index: iocc }))
-                .filter((obj) => obj.data.file === currentOccurrence.file)
-                .map((obj) => ({
-                    startByte: obj.data.span.start,
-                    endByte: obj.data.span.end,
-                    matchIndex: im,
-                    occurrenceIndex: obj.index
-                }));
-        });
-
-    await loadAndDisplayCode(state.projectsDirectoryPath,
-        currentOccurrence.file, rangesToHighlight, pane);
-
-    showOtherOccurrences(occurrenceList, occurrenceIndex, pane);
-
-    // Scroll to the right location only after showing the other occurrences.
-    // Otherwise, if the location is near the bottom of the file, the other
-    // occurrences may hide the highlighted code.
-    scrollToLocation(
-        currentOccurrence.span.start, currentOccurrence.span.end, pane);
-
-    if (showVerdict) {
-        showMatchVerdict();
+        verdictText.className = "hide";
+        acceptButton.className = "show";
+        rejectButton.className = "show";
     }
 }
 
-async function loadAndDisplayCode(projectsDirectoryPath, filePath,
+async function acceptMatch() {
+    // TODO: Ask for confirmation first
+    await window.electronApi.acceptMatch(
+        state.currentMatch.location1, state.currentMatch.location2);
+    await showProjectPairView();
+}
+
+async function rejectMatch() {
+    // TODO: Ask for confirmation first
+    await window.electronApi.rejectMatch(
+        state.currentMatch.location1, state.currentMatch.location2);
+    await showProjectPairView();
+}
+
+async function _showCodeLocation(pane) {
+    const currentLocation = pane === 1
+        ? state.currentMatch.location1
+        : state.currentMatch.location2;
+    // Only highlight code that's part of a match in the current project pair
+    // and file
+    const rangesToHighlight = state.currentProjectPair.matches.flatMap(
+        (match, matchIndex) => {
+            const location = pane === 1 ? match.location1 : match.location2;
+            return location.file === currentLocation.file
+                ? [{
+                    startByte: location.startByte,
+                    endByte: location.endByte,
+                    matchIndex
+                }]
+                : [];
+        });
+
+    const location = pane === 1
+        ? state.currentMatch.location1
+        : state.currentMatch.location2;
+    await _loadAndDisplayCode(state.projectsDirectoryPath, location.file,
+        rangesToHighlight, pane);
+
+    _scrollToLocation(currentLocation.startByte, currentLocation.endByte, pane);
+}
+
+async function _loadAndDisplayCode(projectsDirectoryPath, filePath,
     rangesToHighlight, pane) {
 
     let fileContents;
@@ -334,7 +403,7 @@ async function loadAndDisplayCode(projectsDirectoryPath, filePath,
 
     let highlightedCodeElements;
     try {
-        highlightedCodeElements = annotateCode(
+        highlightedCodeElements = _annotateCode(
             fileContents, rangesToHighlight, pane);
     }
     catch (e) {
@@ -354,37 +423,6 @@ async function loadAndDisplayCode(projectsDirectoryPath, filePath,
     filenameElement.innerText = filePath;
 }
 
-async function showOtherOccurrences(occurrenceList, occurrenceIndex, pane) {
-    const otherOccurrences = occurrenceList
-        .map((o, i) => ({ occurrence: o, index: i }))
-        .filter(x => x.index != occurrenceIndex);
-    const otherOccurrencesContainerElement =
-        document.getElementById(`project${pane}-other-occurrences-container`);
-    const otherOccurrencesListElement =
-        document.getElementById(`project${pane}-other-occurrences`);
-    if (otherOccurrences.length === 0) {
-        otherOccurrencesContainerElement.style.display = "none";
-        removeAllChildren(otherOccurrencesListElement);
-    }
-    else {
-        removeAllChildren(otherOccurrencesListElement);
-        for (const o of otherOccurrences) {
-            const occurrence = o.occurrence;
-            const index = o.index;
-            const liElement = document.createElement("li");
-            const anchorElement = document.createElement("a");
-            anchorElement.href = "#";
-            anchorElement.onclick = () => showCodeLocation(index, pane);
-            anchorElement.innerHTML =
-                `${occurrence.file}:
-                ${occurrence.span.start}&ndash;${occurrence.span.end}`;
-            liElement.appendChild(anchorElement);
-            otherOccurrencesListElement.appendChild(liElement);
-        }
-        otherOccurrencesContainerElement.style.display = "block";
-    }
-}
-
 /**
  * Turns the given plaintext code into HTML that can be highlighted, clicked,
  * etc.
@@ -393,17 +431,16 @@ async function showOtherOccurrences(occurrenceList, occurrenceIndex, pane) {
  * @param {{
  *      startByte: number,
  *      endByte: number,
- *      matchIndex: number,
- *      occurrenceIndex: number
+ *      matchIndex: number
  * }[]} rangesToHighlight The locations to highlight.
  * @returns {HTMLElement[]} HTML elements representing the annotated code.
  */
-function annotateCode(code, rangesToHighlight, pane) {
+function _annotateCode(code, rangesToHighlight) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     const codeBytes = encoder.encode(code);
 
-    const allRanges = partition(codeBytes.length, rangesToHighlight);
+    const allRanges = _partition(codeBytes.length, rangesToHighlight);
 
     return allRanges.map((r) => {
         const element = document.createElement("span");
@@ -429,10 +466,7 @@ function annotateCode(code, rangesToHighlight, pane) {
                             : prev,
                     null);
             if (earliestRange) {
-                element.onclick = () => selectMatch(
-                    earliestRange.matchIndex,
-                    pane === 1 ? earliestRange.occurrenceIndex : undefined,
-                    pane === 1 ? undefined : earliestRange.occurrenceIndex);
+                element.onclick = () => selectMatch(earliestRange.matchIndex);
             }
         }
         return element;
@@ -456,7 +490,7 @@ function annotateCode(code, rangesToHighlight, pane) {
  *        The ranges that must be highlighted.
  * @returns {{startByte: number, endByte: number, highlight: boolean}[]}
  */
-function partition(totalNumBytes, rangesToHighlight) {
+function _partition(totalNumBytes, rangesToHighlight) {
     const rangesWithHighlight = rangesToHighlight.map((r) =>
         ({ startByte: r.startByte, endByte: r.endByte, highlight: true })
     );
@@ -524,7 +558,7 @@ function partition(totalNumBytes, rangesToHighlight) {
     return outputRanges;
 }
 
-function scrollToLocation(startByte, endByte, pane) {
+function _scrollToLocation(startByte, endByte, pane) {
     const codeBlock = document.getElementById(`project${pane}-code`);
     const spansToSelect = Array.from(codeBlock.childNodes).filter((node) =>
         (node.dataset.startByte >= startByte && node.dataset.endByte <= endByte)
@@ -551,71 +585,30 @@ function scrollToLocation(startByte, endByte, pane) {
     }
 }
 
-function showMatchVerdict() {
-    const acceptButton = document.getElementById("accept-match-btn");
-    const rejectButton = document.getElementById("reject-match-btn");
-    const verdictText = document.getElementById("match-verdict");
-
-    const location1 = {
-        file: state.project1Occurrence.file,
-        startByte: state.project1Occurrence.span.start,
-        endByte: state.project1Occurrence.span.end
-    };
-    const location2 = {
-        file: state.project2Occurrence.file,
-        startByte: state.project2Occurrence.span.start,
-        endByte: state.project2Occurrence.span.end
-    };
-    const verdict = window.electronApi.getVerdict(location1, location2);
-    if (verdict === "accept") {
-        verdictText.innerHTML = "Accepted &#10004;";
-        verdictText.className = "show";
-        acceptButton.className = "hide";
-        rejectButton.className = "hide";
-    }
-    else if (verdict === "reject") {
-        verdictText.innerHTML = "Rejected &#10008;";
-        verdictText.className = "show";
-        acceptButton.className = "hide";
-        rejectButton.className = "hide";
-    }
-    else {
-        verdictText.className = "hide";
-        acceptButton.className = "show";
-        rejectButton.className = "show";
-    }
+/**
+ * Removes matches that have already been evaluated by the user and accepted or
+ * rejected.
+ *
+ * @param {[ProjectPair]} projectPairs
+ * @returns {[ProjectPair]}
+ */
+function _filterProjectPairsByVerdict(projectPairs) {
+    return projectPairs
+        .map((pp) => {
+            return new ProjectPair(
+                pp.project1Name,
+                pp.project2Name,
+                _filterMatchesByVerdict(pp.matches),
+                pp.totalNumMatches
+            );
+        })
+        .filter((pp) => pp && pp.matches && pp.matches.length > 0);
 }
 
-async function acceptMatch() {
-    // TODO: Ask for confirmation first
-    const location1 = {
-        file: state.project1Occurrence.file,
-        startByte: state.project1Occurrence.span.start,
-        endByte: state.project1Occurrence.span.end
-    };
-    const location2 = {
-        file: state.project2Occurrence.file,
-        startByte: state.project2Occurrence.span.start,
-        endByte: state.project2Occurrence.span.end
-    };
-    await window.electronApi.acceptMatch(location1, location2);
-    await showProjectPairView();
-}
-
-async function rejectMatch() {
-    // TODO: Ask for confirmation first
-    const location1 = {
-        file: state.project1Occurrence.file,
-        startByte: state.project1Occurrence.span.start,
-        endByte: state.project1Occurrence.span.end
-    };
-    const location2 = {
-        file: state.project2Occurrence.file,
-        startByte: state.project2Occurrence.span.start,
-        endByte: state.project2Occurrence.span.end
-    };
-    await window.electronApi.rejectMatch(location1, location2);
-    await showProjectPairView();
+function _filterMatchesByVerdict(matches) {
+    return matches.filter((m) =>
+        // TODO: Will this be absurdly slow?
+        window.electronApi.getVerdict(m.location1, m.location2) === "unknown");
 }
 
 /* WARNINGS ----------------------------------------------------------------- */
@@ -634,7 +627,7 @@ function displayWarnings(warnings) {
         const rowElement = document.createElement("tr");
 
         const typeCell = document.createElement("td");
-        typeCell.innerText = warning.warn_type;
+        typeCell.innerText = warning.warnType;
         rowElement.appendChild(typeCell);
 
         const fileCell = document.createElement("td");
@@ -660,4 +653,164 @@ function removeAllChildren(element) {
     while (element.firstChild) {
         element.removeChild(element.firstChild);
     }
+}
+
+function _clamp(x, min, max) {
+    if (x < min) {
+        return min;
+    }
+    else if (x > max) {
+        return max;
+    }
+    else {
+        return x;
+    }
+}
+
+/**
+ * @param {Array} projectPairsFromFile
+ * @param {string} fileName
+ * @returns {{projectPairs: [ProjectPair], warnings: [Warning]}}
+ */
+function _convertProjectPairs(projectPairsFromFile, fileName) {
+    const projectPairs = [];
+    let allWarnings = [];
+    for (let i = 0; i < projectPairsFromFile.length; i++) {
+        const pp = projectPairsFromFile[i];
+        const badAttributes = [];
+        if (!pp.project1) {
+            badAttributes.push("project1");
+        }
+        if (!pp.project2) {
+            badAttributes.push("project2");
+        }
+        if (!Array.isArray(pp.matches)) {
+            badAttributes.push("matches");
+        }
+        if (badAttributes.length > 0) {
+            const w = new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${i}] Missing or invalid attributes: `
+                + `${badAttributes.join(", ")}. That project pair has been `
+                + "discarded.");
+            allWarnings.push(w);
+        }
+        else {
+            const { matches, warnings }
+                = _convertMatches(pp.matches, fileName);
+            allWarnings = allWarnings.concat(warnings);
+            if (matches.length === 0) {
+                const w = new Warning(
+                    "Load JSON",
+                    fileName,
+                    `[Project pair at index ${i}] No valid matches. That `
+                    + "project pair has been discarded.");
+                allWarnings.push(w);
+            }
+            else {
+                const convertedProjectPair = new ProjectPair(
+                    pp.project1, pp.project2, matches, matches.length);
+                projectPairs.push(convertedProjectPair);
+            }
+        }
+    }
+    return { projectPairs, warnings: allWarnings };
+}
+
+/**
+ * @param {Array} matchesFromFile
+ * @param {string} fileName
+ * @param {number} projectPairIndex
+ * @returns {{matches: [Match], warnings: [Warning]}}
+ */
+function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
+    const matches = [];
+    let allWarnings = [];
+    for (let i = 0; i < matchesFromFile.length; i++) {
+        const m = matchesFromFile[i];
+        const badAttributes = [];
+        if (!Array.isArray(m.project1_occurrences)) {
+            badAttributes.push("project1_occurrences");
+        }
+        if (!Array.isArray(m.project2_occurrences)) {
+            badAttributes.push("project2_occurrences");
+        }
+        if (badAttributes.length > 0) {
+            const w = new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${projectPairIndex}, match at index `
+                + `${i}] Missing or invalid attributes: `
+                + `${badAttributes.join(", ")}. That match has been discarded.`
+            );
+            allWarnings.push(w);
+        }
+        else {
+            const { locations: project1Locations, warnings: project1Warnings }
+                = _convertLocations(m.project1_occurrences, fileName,
+                    projectPairIndex, i, 1);
+            allWarnings = allWarnings.concat(project1Warnings);
+            const { locations: project2Locations, warnings: project2Warnings }
+                = _convertLocations(m.project2_occurrences, fileName,
+                    projectPairIndex, i, 2);
+            allWarnings = allWarnings.concat(project2Warnings);
+            for (const loc1 of project1Locations) {
+                for (const loc2 of project2Locations) {
+                    matches.push(new Match(loc1, loc2));
+                }
+            }
+        }
+    }
+    return { matches, warnings: allWarnings };
+}
+
+/**
+ * @param {Array} occurrences
+ * @param {string} fileName
+ * @param {number} projectPairIndex
+ * @param {number} matchIndex
+ * @param {number} projectNumber
+ * @returns {{locations: [CodeLocation], warnings: [Warning]}}
+ */
+function _convertLocations(occurrences, fileName, projectPairIndex,
+    matchIndex, projectNumber) {
+
+    const locations = [];
+    const warnings = [];
+    for (let i = 0; i < occurrences.length; i++) {
+        const occ = occurrences[i];
+        const badAttributes = [];
+        if (!occ.file) {
+            badAttributes.push("file");
+        }
+        if (!occ.span) {
+            badAttributes.push("span");
+        }
+        else {
+            const start = occ.span.start;
+            const end = occ.span.end;
+            if (!Number.isFinite(start) || start < 0) {
+                badAttributes.push("span.start");
+            }
+            if (!Number.isFinite(end) || end <= start) {
+                badAttributes.push("span.end");
+            }
+        }
+        if (badAttributes.length > 0) {
+            const w = new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${projectPairIndex}, match at index `
+                + `${matchIndex}, project ${projectNumber}, occurrence ${i}] `
+                + `Missing or invalid attributes: ${badAttributes.join(", ")}. `
+                + "That occurrence has been discarded.");
+            warnings.push(w);
+        }
+        else {
+            locations.push(
+                new CodeLocation(occ.file, occ.span.start, occ.span.end));
+        }
+    }
+    return { locations, warnings };
 }

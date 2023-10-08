@@ -115,14 +115,6 @@ main {
     scroll-behavior: smooth;
 }
 
-#project1-other-occurrences-container,
-#project2-other-occurrences-container {
-    overflow-y: auto;
-    max-height: 20%;
-    /* Hide this unless there are other occurrences to show. */
-    display: none;
-}
-
 /* WARNINGS LAYOUT ---------------------------------------------------------- */
 
 #no-warnings-msg {

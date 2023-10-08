@@ -115,6 +115,7 @@ async function openFile(browserWindow) {
     const directoryPath = directoryDialogResult.filePaths[0];
 
     browserWindow.webContents.send("open-file", {
+        fileName: path.basename(filePath),
         filePath: filePath,
         fileContents: fileContents,
         directoryPath: directoryPath,
