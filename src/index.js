@@ -164,28 +164,18 @@ async function openFile(file) {
 // Call this function when switching views (e.g., from project pairs view to
 // warnings view).
 async function showView() {
-    const noResultsElement = document.getElementById("no-results-msg");
-    const projectPairsContainer
-        = document.getElementById("outer-project-pair-container");
-    const noWarningsElement = document.getElementById("no-warnings-msg");
-    const warningsContainer = document.getElementById("warnings-container");
+    const projectPairsView = document.getElementById("project-pairs-view");
+    const warningsView = document.getElementById("warnings-view");
+
     const view = document.getElementById("select-view").value;
     if (view === "warnings") {
-        noResultsElement.style.display = "none";
-        projectPairsContainer.style.display = "none";
-        if (state.warnings.length === 0) {
-            warningsContainer.style.display = "none";
-            noWarningsElement.style.display = "block";
-        }
-        else {
-            noWarningsElement.style.display = "none";
-            warningsContainer.style.display = "block";
-            displayWarnings(state.warnings);
-        }
+        projectPairsView.className = "hide";
+        warningsView.className = "show";
+        showWarningsView();
     }
     else {
-        noWarningsElement.style.display = "none";
-        warningsContainer.style.display = "none";
+        warningsView.className = "hide";
+        projectPairsView.className = "show";
         await showProjectPairView();
     }
 }
@@ -195,17 +185,16 @@ async function showView() {
 async function showProjectPairView() {
     state.projectPairs = _filterProjectPairsByVerdict(state.projectPairs);
 
-    // TODO: Avoid this duplication
     const noResultsElement = document.getElementById("no-results-msg");
     const projectPairsContainer
         = document.getElementById("outer-project-pair-container");
     if (state.projectPairs.length === 0) {
-        projectPairsContainer.style.display = "none";
-        noResultsElement.style.display = "block";
+        projectPairsContainer.className = "hide";
+        noResultsElement.className = "show";
     }
     else {
-        noResultsElement.style.display = "none";
-        projectPairsContainer.style.display = "flex";
+        noResultsElement.className = "hide";
+        projectPairsContainer.className = "show";
         state.clampIndices();
         displayProjectPairs(state.projectPairs);
         await selectProjectPair(state.currentProjectPairIndex);
@@ -616,6 +605,20 @@ function _filterMatchesByVerdict(matches) {
 }
 
 /* WARNINGS ----------------------------------------------------------------- */
+
+function showWarningsView() {
+    const noWarningsElement = document.getElementById("no-warnings-msg");
+    const warningsContainer = document.getElementById("warnings-container");
+    if (state.warnings && state.warnings.length > 0) {
+        noWarningsElement.className = "hide";
+        warningsContainer.className = "show";
+        displayWarnings(state.warnings);
+    }
+    else {
+        warningsContainer.className = "hide";
+        noWarningsElement.className = "show";
+    }
+}
 
 function displayWarnings(warnings) {
     const warningsTableBody = document.getElementById("warnings-tbody");
