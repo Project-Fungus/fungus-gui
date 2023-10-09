@@ -157,3 +157,10 @@ test("Serialize and then deserialize", () => {
         serialized);
     expect(deserializedRelation).toStrictEqual(r);
 });
+
+test("Deserialize empty", () => {
+    const emptyRel = new CodeEquivalenceRelation();
+    expect(CodeEquivalenceRelation.deserialize()).toStrictEqual(emptyRel);
+    expect(CodeEquivalenceRelation.deserialize(null)).toStrictEqual(emptyRel);
+    expect(CodeEquivalenceRelation.deserialize("")).toStrictEqual(emptyRel);
+});

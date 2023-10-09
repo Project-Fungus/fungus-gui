@@ -136,6 +136,9 @@ class CodeEquivalenceRelation {
      * @returns {CodeEquivalenceRelation}
      */
     static deserialize(serializedData) {
+        if (!serializedData) {
+            return new CodeEquivalenceRelation();
+        }
         const r = JSON.parse(serializedData);
         return new CodeEquivalenceRelation(r.equivalenceClasses,
             new Set(r.differentEquivalenceClasses), r.counter);
