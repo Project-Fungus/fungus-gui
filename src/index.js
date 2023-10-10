@@ -630,7 +630,6 @@ function _filterProjectPairsByVerdict(projectPairs) {
 
 function _filterMatchesByVerdict(matches) {
     return matches.filter((m) =>
-        // TODO: Will this be absurdly slow?
         window.electronApi.getVerdict(m.location1, m.location2) === "unknown");
 }
 
