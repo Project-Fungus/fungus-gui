@@ -126,10 +126,12 @@ window.addEventListener("DOMContentLoaded", function () {
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
         "click", selectNextMatch);
-    document.getElementById("accept-match-btn").addEventListener(
-        "click", acceptMatch);
-    document.getElementById("reject-match-btn").addEventListener(
-        "click", rejectMatch);
+    document.getElementById("no-match-btn").addEventListener(
+        "click", markNoMatch);
+    document.getElementById("match-without-plagiarism-btn").addEventListener(
+        "click", markMatchWithoutPlagiarism);
+    document.getElementById("plagiarism-btn").addEventListener(
+        "click", markPlagiarism);
 });
 
 /**
@@ -307,50 +309,74 @@ async function selectNextMatch() {
 }
 
 function showMatchVerdict() {
-    const acceptButton = document.getElementById("accept-match-btn");
-    const rejectButton = document.getElementById("reject-match-btn");
+    const noMatchButton = document.getElementById("no-match-btn");
+    const matchWithoutPlagiarismButton
+        = document.getElementById("match-without-plagiarism-btn");
+    const plagiarismButton = document.getElementById("plagiarism-btn");
     const verdictText = document.getElementById("match-verdict");
 
     const verdict = window.electronApi.getVerdict(
         state.currentMatch.location1, state.currentMatch.location2);
-    if (verdict === "accept") {
-        verdictText.innerHTML = "Accepted &#10004;";
+    if (verdict === "no-match") {
+        verdictText.innerHTML = "No Match &#10008;";
+        noMatchButton.className = "hide";
+        matchWithoutPlagiarismButton.className = "hide";
+        plagiarismButton.className = "hide";
         verdictText.className = "show";
-        acceptButton.className = "hide";
-        rejectButton.className = "hide";
     }
-    else if (verdict === "reject") {
-        verdictText.innerHTML = "Rejected &#10008;";
+    else if (verdict === "match-without-plagiarism") {
+        verdictText.innerHTML = "Match Without Plagiarism &#10008;";
+        noMatchButton.className = "hide";
+        matchWithoutPlagiarismButton.className = "hide";
+        plagiarismButton.className = "hide";
         verdictText.className = "show";
-        acceptButton.className = "hide";
-        rejectButton.className = "hide";
+    }
+    else if (verdict === "plagiarism") {
+        verdictText.innerHTML = "Plagiarism &#10004;";
+        noMatchButton.className = "hide";
+        matchWithoutPlagiarismButton.className = "hide";
+        plagiarismButton.className = "hide";
+        verdictText.className = "show";
     }
     else {
         verdictText.className = "hide";
-        acceptButton.className = "show";
-        rejectButton.className = "show";
+        noMatchButton.className = "show";
+        matchWithoutPlagiarismButton.className = "show";
+        plagiarismButton.className = "show";
     }
 }
 
-async function acceptMatch() {
-    const shouldAccept = await window.electronApi.askToConfirm(
-        "Are you sure you want to mark the current match as plagiarism?");
-    if (!shouldAccept) {
+async function markNoMatch() {
+    const shouldContinue = await window.electronApi.askToConfirm(
+        "Are you sure you want to record that the two current code snippets "
+        + "are *not* the same?");
+    if (!shouldContinue) {
         return;
     }
-    await window.electronApi.acceptMatch(
+    await window.electronApi.markNoMatch(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();
 }
 
-async function rejectMatch() {
-    const shouldAccept = await window.electronApi.askToConfirm(
-        "Are you sure you want to mark the current match as *not* being "
-        + "plagiarism?");
-    if (!shouldAccept) {
+async function markMatchWithoutPlagiarism() {
+    const shouldContinue = await window.electronApi.askToConfirm(
+        "Are you sure you want to record that the code is the same but that it "
+        + "was probably not plagiarized?");
+    if (!shouldContinue) {
         return;
     }
-    await window.electronApi.rejectMatch(
+    await window.electronApi.markMatchWithoutPlagiarism(
+        state.currentMatch.location1, state.currentMatch.location2);
+    await showProjectPairView();
+}
+
+async function markPlagiarism() {
+    const shouldContinue = await window.electronApi.askToConfirm(
+        "Are you sure you want to mark the current match as plagiarism?");
+    if (!shouldContinue) {
+        return;
+    }
+    await window.electronApi.markPlagiarism(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();
 }

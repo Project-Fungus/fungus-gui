@@ -1,9 +1,9 @@
 const { contextBridge, ipcRenderer } = require("electron");
 const fs = require("fs/promises");
 const path = require("path");
-const { CodeEquivalenceRelation } = require("./verdict");
+const { VerdictSet } = require("./verdict");
 
-let currentCodeEquivalenceRelation = new CodeEquivalenceRelation();
+let currentVerdictSet = new VerdictSet();
 let verdictsFilePath = null;
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -11,8 +11,9 @@ contextBridge.exposeInMainWorld("electronApi", {
     readFile,
     askToConfirm,
     loadVerdicts,
-    acceptMatch,
-    rejectMatch,
+    markNoMatch,
+    markMatchWithoutPlagiarism,
+    markPlagiarism,
     getVerdict
 });
 
@@ -43,8 +44,7 @@ async function loadVerdicts(filePath) {
     try {
         verdictsFileHandle = await fs.open(filePath, "a+");
         const data = await verdictsFileHandle.readFile("utf-8");
-        currentCodeEquivalenceRelation
-            = CodeEquivalenceRelation.deserialize(data);
+        currentVerdictSet = VerdictSet.deserialize(data);
         verdictsFilePath = filePath;
     }
     catch (e) {
@@ -60,27 +60,32 @@ async function loadVerdicts(filePath) {
     }
 }
 
-async function acceptMatch(location1, location2) {
-    currentCodeEquivalenceRelation.accept(location1, location2);
-    await _saveVerdicts(currentCodeEquivalenceRelation, verdictsFilePath);
+async function markNoMatch(location1, location2) {
+    currentVerdictSet.markNoMatch(location1, location2);
+    await _saveVerdicts(currentVerdictSet, verdictsFilePath);
 }
 
-async function rejectMatch(location1, location2) {
-    currentCodeEquivalenceRelation.reject(location1, location2);
-    await _saveVerdicts(currentCodeEquivalenceRelation, verdictsFilePath);
+async function markMatchWithoutPlagiarism(location1, location2) {
+    currentVerdictSet.markMatchWithoutPlagiarism(location1, location2);
+    await _saveVerdicts(currentVerdictSet, verdictsFilePath);
+}
+
+async function markPlagiarism(location1, location2) {
+    currentVerdictSet.markPlagiarism(location1, location2);
+    await _saveVerdicts(currentVerdictSet, verdictsFilePath);
 }
 
 function getVerdict(location1, location2) {
-    return currentCodeEquivalenceRelation.getVerdict(location1, location2);
+    return currentVerdictSet.getVerdict(location1, location2);
 }
 
-async function _saveVerdicts(codeEquivalenceRelation, filePath) {
-    if (!codeEquivalenceRelation || !filePath) {
+async function _saveVerdicts(VerdictSet, filePath) {
+    if (!VerdictSet || !filePath) {
         return;
     }
 
     try {
-        const data = codeEquivalenceRelation.serialize();
+        const data = VerdictSet.serialize();
         await fs.writeFile(filePath, data, "utf-8");
     }
     catch (e) {

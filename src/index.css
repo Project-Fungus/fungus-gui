@@ -194,25 +194,33 @@ pre {
     font-size: medium;
 }
 
-#accept-match-btn {
-    color: green;
-    border: 1px solid green;
-    border-radius: 5px;
-}
-
-#reject-match-btn {
+#no-match-btn {
     color: red;
     border: 1px solid red;
     border-radius: 5px;
 }
 
-#accept-match-btn:hover,
-#reject-match-btn:hover {
+#match-without-plagiarism-btn {
+    color: orange;
+    border: 1px solid orange;
+    border-radius: 5px;
+}
+
+#plagiarism-btn {
+    color: green;
+    border: 1px solid green;
+    border-radius: 5px;
+}
+
+#no-match-btn:hover,
+#match-without-plagiarism-btn:hover,
+#plagiarism-btn:hover {
     background-color: darkgrey;
 }
 
-#accept-match-btn:active,
-#reject-match-btn:active {
+#no-match-btn:active,
+#match-without-plagiarism-btn:active,
+#plagiarism-btn:active {
     background-color: inherit;
 }
 
