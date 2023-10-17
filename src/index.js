@@ -348,35 +348,18 @@ function showMatchVerdict() {
 }
 
 async function markNoMatch() {
-    const shouldContinue = await window.electronApi.askToConfirm(
-        "Are you sure you want to record that the two current code snippets "
-        + "are *not* the same?");
-    if (!shouldContinue) {
-        return;
-    }
     await window.electronApi.markNoMatch(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();
 }
 
 async function markMatchWithoutPlagiarism() {
-    const shouldContinue = await window.electronApi.askToConfirm(
-        "Are you sure you want to record that the code is the same but that it "
-        + "was probably not plagiarized?");
-    if (!shouldContinue) {
-        return;
-    }
     await window.electronApi.markMatchWithoutPlagiarism(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();
 }
 
 async function markPlagiarism() {
-    const shouldContinue = await window.electronApi.askToConfirm(
-        "Are you sure you want to mark the current match as plagiarism?");
-    if (!shouldContinue) {
-        return;
-    }
     await window.electronApi.markPlagiarism(
         state.currentMatch.location1, state.currentMatch.location2);
     await showProjectPairView();

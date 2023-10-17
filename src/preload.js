@@ -9,7 +9,6 @@ let verdictsFilePath = null;
 contextBridge.exposeInMainWorld("electronApi", {
     onOpenFile: (callback) => ipcRenderer.on("open-file", callback),
     readFile,
-    askToConfirm,
     loadVerdicts,
     markNoMatch,
     markMatchWithoutPlagiarism,
@@ -20,19 +19,6 @@ contextBridge.exposeInMainWorld("electronApi", {
 async function readFile(directoryPath, filePath) {
     const combinedPath = path.join(directoryPath, filePath);
     return await fs.readFile(combinedPath, "utf-8");
-}
-
-/**
- * @returns {boolean}
- */
-async function askToConfirm(message) {
-    const options = {
-        message,
-        buttons: ["Yes", "No"],
-        title: "Confirm"
-    };
-    const output = await ipcRenderer.invoke("dialog:showMessageBox", options);
-    return output.response === 0;
 }
 
 async function loadVerdicts(filePath) {

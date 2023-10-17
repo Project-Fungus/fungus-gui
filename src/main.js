@@ -13,10 +13,6 @@ app.whenReady().then(() => {
         if (BrowserWindow.getAllWindows().length === 0)
             createWindow();
     });
-    ipcMain.handle("dialog:showMessageBox", async (event, options) => {
-        const browserWindow = BrowserWindow.fromWebContents(event.sender);
-        return await dialog.showMessageBox(browserWindow, options);
-    });
 });
 
 app.on("window-all-closed", () => {
