@@ -711,46 +711,38 @@ function _clamp(x, min, max) {
 function _convertProjectPairs(projectPairsFromFile, fileName) {
     const projectPairs = [];
     let allWarnings = [];
+
     for (let i = 0; i < projectPairsFromFile.length; i++) {
         const pp = projectPairsFromFile[i];
         const badAttributes = [];
-        if (!pp.project1) {
-            badAttributes.push("project1");
-        }
-        if (!pp.project2) {
-            badAttributes.push("project2");
-        }
-        if (!Array.isArray(pp.matches)) {
-            badAttributes.push("matches");
-        }
+        if (!pp.project1) badAttributes.push("project1");
+        if (!pp.project2) badAttributes.push("project2");
+        if (!Array.isArray(pp.matches)) badAttributes.push("matches");
         if (badAttributes.length > 0) {
-            const w = new Warning(
+            allWarnings.push(new Warning(
                 "Load JSON",
                 fileName,
                 `[Project pair at index ${i}] Missing or invalid attributes: `
                 + `${badAttributes.join(", ")}. That project pair has been `
-                + "discarded.");
-            allWarnings.push(w);
+                + "discarded."));
+            continue;
         }
-        else {
-            const { matches, warnings }
-                = _convertMatches(pp.matches, fileName);
-            allWarnings = allWarnings.concat(warnings);
-            if (matches.length === 0) {
-                const w = new Warning(
-                    "Load JSON",
-                    fileName,
-                    `[Project pair at index ${i}] No valid matches. That `
-                    + "project pair has been discarded.");
-                allWarnings.push(w);
-            }
-            else {
-                const convertedProjectPair = new ProjectPair(
-                    pp.project1, pp.project2, matches, matches.length);
-                projectPairs.push(convertedProjectPair);
-            }
+
+        const { matches, warnings } = _convertMatches(pp.matches, fileName);
+        allWarnings = allWarnings.concat(warnings);
+        if (matches.length === 0) {
+            allWarnings.push(new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${i}] No valid matches. That `
+                + "project pair has been discarded."));
+            continue;
         }
+
+        projectPairs.push(new ProjectPair(
+            pp.project1, pp.project2, matches, matches.length));
     }
+
     return {
         projectPairs: projectPairs.sort(_compareProjectPairs),
         warnings: allWarnings
@@ -766,41 +758,52 @@ function _convertProjectPairs(projectPairsFromFile, fileName) {
 function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
     const matches = [];
     let allWarnings = [];
+
     for (let i = 0; i < matchesFromFile.length; i++) {
         const m = matchesFromFile[i];
         const badAttributes = [];
-        if (!Array.isArray(m.project1_occurrences)) {
-            badAttributes.push("project1_occurrences");
-        }
-        if (!Array.isArray(m.project2_occurrences)) {
-            badAttributes.push("project2_occurrences");
-        }
+        if (!m.project_1_location) badAttributes.push("project_1_location");
+        if (!m.project_2_location) badAttributes.push("project_2_location");
         if (badAttributes.length > 0) {
-            const w = new Warning(
+            allWarnings.push(new Warning(
                 "Load JSON",
                 fileName,
                 `[Project pair at index ${projectPairIndex}, match at index `
                 + `${i}] Missing or invalid attributes: `
-                + `${badAttributes.join(", ")}. That match has been discarded.`
-            );
-            allWarnings.push(w);
+                + `${badAttributes.join(", ")}. That match has been`
+                + "discarded."));
+            continue;
         }
-        else {
-            const { locations: project1Locations, warnings: project1Warnings }
-                = _convertLocations(m.project1_occurrences, fileName,
-                    projectPairIndex, i, 1);
-            allWarnings = allWarnings.concat(project1Warnings);
-            const { locations: project2Locations, warnings: project2Warnings }
-                = _convertLocations(m.project2_occurrences, fileName,
-                    projectPairIndex, i, 2);
-            allWarnings = allWarnings.concat(project2Warnings);
-            for (const loc1 of project1Locations) {
-                for (const loc2 of project2Locations) {
-                    matches.push(new Match(loc1, loc2));
-                }
-            }
+
+        const { location: location1, warnings: warnings1 } = _convertLocation(
+            m.project_1_location, projectPairIndex, i, 1);
+        allWarnings = allWarnings.concat(warnings1);
+        if (!location1) {
+            allWarnings.push(new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${projectPairIndex}, match at index `
+                + `${i}] Failed to convert project 1 location. This match has `
+                + "been discarded."));
+            continue;
         }
+
+        const { location: location2, warnings: warnings2 } = _convertLocation(
+            m.project_2_location, projectPairIndex, i, 2);
+        allWarnings = allWarnings.concat(warnings2);
+        if (!location2) {
+            allWarnings.push(new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${projectPairIndex}, match at index `
+                + `${i}] Failed to convert project 2 location. This match has `
+                + "been discarded."));
+            continue;
+        }
+
+        matches.push(new Match(location1, location2));
     }
+
     return {
         matches: matches.sort(_compareMatches),
         warnings: allWarnings
@@ -808,56 +811,50 @@ function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
 }
 
 /**
- * @param {Array} occurrences
- * @param {string} fileName
+ * @param {{file: string, span: {start: number, end: number}}} locationFromFile
  * @param {number} projectPairIndex
  * @param {number} matchIndex
  * @param {number} projectNumber
- * @returns {{locations: [CodeLocation], warnings: [Warning]}}
+ * @returns {{location: CodeLocation, warnings: [Warning]}}
  */
-function _convertLocations(occurrences, fileName, projectPairIndex,
-    matchIndex, projectNumber) {
-
-    const locations = [];
-    const warnings = [];
-    for (let i = 0; i < occurrences.length; i++) {
-        const occ = occurrences[i];
-        const badAttributes = [];
-        if (!occ.file) {
-            badAttributes.push("file");
+function _convertLocation(locationFromFile, projectPairIndex, matchIndex, projectNumber) {
+    const badAttributes = [];
+    if (!locationFromFile.file) {
+        badAttributes.push("file");
+    }
+    if (!locationFromFile.span) {
+        badAttributes.push("span");
+    }
+    else {
+        const start = locationFromFile.span.start;
+        const end = locationFromFile.span.end;
+        if (!Number.isFinite(start) || start < 0) {
+            badAttributes.push("span.start");
         }
-        if (!occ.span) {
-            badAttributes.push("span");
-        }
-        else {
-            const start = occ.span.start;
-            const end = occ.span.end;
-            if (!Number.isFinite(start) || start < 0) {
-                badAttributes.push("span.start");
-            }
-            if (!Number.isFinite(end) || end <= start) {
-                badAttributes.push("span.end");
-            }
-        }
-        if (badAttributes.length > 0) {
-            const w = new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${projectPairIndex}, match at index `
-                + `${matchIndex}, project ${projectNumber}, occurrence ${i}] `
-                + `Missing or invalid attributes: ${badAttributes.join(", ")}. `
-                + "That occurrence has been discarded.");
-            warnings.push(w);
-        }
-        else {
-            locations.push(
-                new CodeLocation(occ.file, occ.span.start, occ.span.end));
+        if (!Number.isFinite(end) || end <= start) {
+            badAttributes.push("span.end");
         }
     }
-    return {
-        locations: locations.sort(_compareLocations),
-        warnings
-    };
+    if (badAttributes.length > 0) {
+        return {
+            location: null,
+            warnings: [new Warning(
+                "Load JSON",
+                fileName,
+                `[Project pair at index ${projectPairIndex}, match at index`
+                + `${matchIndex}, project ${projectNumber}] Missing or invalid`
+                + `attributes: ${badAttributes.join(", ")}.`)]
+        };
+    }
+    else {
+        return {
+            location: new CodeLocation(
+                locationFromFile.file,
+                locationFromFile.span.start,
+                locationFromFile.span.end),
+            warnings: []
+        };
+    }
 }
 
 function _compareProjectPairs(projectPair1, projectPair2) {
