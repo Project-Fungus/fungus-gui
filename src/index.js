@@ -83,6 +83,7 @@ class GuiState {
         } = _convertProjectPairs(projectPairs, fileName);
         this.projectPairs = convertedProjectPairs;
         this.warnings = this.warnings.concat(conversionWarnings);
+        this.warnings = this.warnings.sort(_compareWarnings);
 
         this.currentProjectPairIndex = 0;
         this.currentMatchIndex = 0;
@@ -857,17 +858,39 @@ function _convertLocation(locationFromFile, projectPairIndex, matchIndex, projec
     }
 }
 
+/**
+ * @param {ProjectPair} projectPair1
+ * @param {ProjectPair} projectPair2
+ */
 function _compareProjectPairs(projectPair1, projectPair2) {
     return projectPair2.totalNumMatches - projectPair1.totalNumMatches;
 }
 
+/**
+ * @param {Match} match1
+ * @param {Match} match2
+ */
 function _compareMatches(match1, match2) {
     return _compareLocations(match1.location1, match2.location1)
         || _compareLocations(match1.location2, match2.location2);
 }
 
+/**
+ * @param {CodeLocation} location1
+ * @param {CodeLocation} location2
+ */
 function _compareLocations(location1, location2) {
     return (("" + location1.file).localeCompare(location2.file))
         || (location1.startByte - location2.startByte)
         || (location1.endByte - location2.endByte);
+}
+
+/**
+ * @param {Warning} warning1
+ * @param {Warning} warning2
+ */
+function _compareWarnings(warning1, warning2) {
+    return warning1.warnType.localeCompare(warning2.warnType)
+        || warning1.file.localeCompare(warning2.file)
+        || warning1.message.localeCompare(warning2.message);
 }
