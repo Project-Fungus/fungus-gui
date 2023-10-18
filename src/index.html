@@ -5,24 +5,42 @@
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">
-    <title>FUNGUS</title>
+    <title id="document-title">FUNGUS</title>
     <script src="./index.js"></script>
     <link href="./index.css" rel="stylesheet" />
 </head>
 
 <body>
-    <header>
-        <span id="current-file-msg">Open a file to get started.</span>
-        <select id="select-view">
-            <option value="project-pairs">Project Pairs</option>
-            <option value="warnings">Warnings</option>
-        </select>
-    </header>
-    <hr />
     <main>
+        <!-- OPEN FILES -->
+        <div id="open-files-view" class="show">
+            <p id="open-files-error-msg" class="error-msg"></p>
+            <p>Select the files to open.</p>
+            <div id="open-files-grid">
+                <!-- Plagiarism results file -->
+                <span id="plagiarism-results-file-label">Plagiarism results</span>
+                <div></div>
+                <button id="plagiarism-results-file-btn">Choose File</button>
+                <span id="plagiarism-results-file-path"></span>
+                <!-- Projects directory -->
+                <span id="projects-directory-label">Projects</span>
+                <div></div>
+                <button id="projects-directory-btn">Choose Directory</button>
+                <span id="projects-directory-path"></span>
+                <!-- Verdicts file -->
+                <span id="verdicts-file-label">Verdicts</span>
+                <div>
+                    <input id="is-verdicts-file-new-checkbox" type="checkbox" />
+                    <label for="is-verdicts-file-new-checkbox">New File</label>
+                </div>
+                <button id="verdicts-file-btn">Choose File</button>
+                <span id="verdicts-file-path"></span>
+            </div>
+            <button id="open-files-btn">Go</button>
+        </div>
         <!-- PROJECT PAIRS -->
         <div id="project-pairs-view" class="hide">
-            <p id="no-results-msg">No matches were found.</p>
+            <p id="no-results-msg">There are no matches to show.</p>
             <div id="outer-project-pair-container">
                 <div id="project-pair-list">
                     <!-- Project pairs go here. For example: -->

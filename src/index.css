@@ -38,6 +38,13 @@ main {
     align-items: stretch;
 }
 
+/* OPEN FILES LAYOUT -------------------------------------------------------- */
+
+#open-files-grid {
+    display: grid;
+    grid-template-columns: max-content max-content max-content max-content;
+}
+
 /* PROJECT PAIRS LAYOUT ----------------------------------------------------- */
 
 #project-pairs-view {
@@ -130,6 +137,10 @@ main {
 }
 
 /* END LAYOUT --------------------------------------------------------------- */
+
+.error-msg {
+    color: red;
+}
 
 .hide {
     display: none !important;

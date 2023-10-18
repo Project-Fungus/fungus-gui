@@ -1,6 +1,5 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
-const fs = require("fs/promises");
 
 ipcMain.handle("dialog:showErrorBox", (_, options) => {
     dialog.showErrorBox(options.title || "Error", options.content);
@@ -12,6 +11,20 @@ app.whenReady().then(() => {
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0)
             createWindow();
+    });
+    ipcMain.handle("dialog:showOpenDialog", async (event, options) => {
+        const browserWindow = BrowserWindow.fromWebContents(event.sender);
+        const result = await dialog.showOpenDialog(browserWindow, options);
+        const noInput = result.canceled
+            || !result.filePaths
+            || result.filePaths.length <= 0;
+        return noInput ? null : result.filePaths[0];
+    });
+    ipcMain.handle("dialog:showSaveDialog", async (event, options) => {
+        const browserWindow = BrowserWindow.fromWebContents(event.sender);
+        const result = await dialog.showSaveDialog(browserWindow, options);
+        const noInput = result.canceled || !result.filePath;
+        return noInput ? null : result.filePaths;
     });
 });
 
@@ -41,104 +54,40 @@ function createApplicationMenu() {
             submenu: [
                 {
                     label: "Open",
-                    click: (_, browserWindow) => openFile(browserWindow),
-                    accelerator: "CmdOrCtrl+O"
+                    accelerator: "CmdOrCtrl+O",
+                    click: (_, browserWindow) => {
+                        browserWindow.webContents.send("show-open-files-view");
+                    }
                 },
-                {
-                    label: "Exit",
-                    role: "quit"
-                }
+                { role: "quit" }
             ]
         },
         {
             label: "&View",
             submenu: [
                 {
-                    role: "zoomIn",
-                    accelerator: "CmdOrCtrl+="
+                    label: "Matches",
+                    accelerator: "CmdOrCtrl+M",
+                    click: (_, browserWindow) => {
+                        browserWindow.webContents
+                            .send("show-project-pairs-view");
+                    }
                 },
                 {
-                    role: "zoomOut"
+                    label: "Warnings",
+                    accelerator: "CmdOrCtrl+W",
+                    click: (_, browserWindow) => {
+                        browserWindow.webContents.send("show-warnings-view");
+                    }
                 },
-                {
-                    role: "resetZoom"
-                },
-                {
-                    role: "togglefullscreen"
-                },
-                {
-                    role: "toggleDevTools"
-                },
+                { type: "separator" },
+                { role: "zoomIn", accelerator: "CmdOrCtrl+=" },
+                { role: "zoomOut" },
+                { role: "resetZoom" },
+                { role: "togglefullscreen" },
+                { role: "toggleDevTools" },
             ]
         }
     ]);
     Menu.setApplicationMenu(menu);
-}
-
-async function openFile(browserWindow) {
-    const fileDialogResult = await dialog.showOpenDialog(browserWindow, {
-        title: "Select the plagiarism results file",
-        filters: [
-            { name: "FUNGUS File", extensions: ["json"] }
-        ],
-        properties: ["openFile"]
-    });
-    const didInputFile = !fileDialogResult.canceled
-        && fileDialogResult.filePaths
-        && fileDialogResult.filePaths.length > 0;
-    if (!didInputFile) {
-        return;
-    }
-    const filePath = fileDialogResult.filePaths[0];
-
-    let fileContents;
-    try {
-        const fileText = await fs.readFile(filePath, "utf-8");
-        fileContents = JSON.parse(fileText);
-    }
-    catch (e) {
-        dialog.showErrorBox(
-            "Failed to open file",
-            `The file "${filePath}" could not be read. Check that the file`
-            + " exists and that you have permission to read it."
-        );
-        return;
-    }
-
-    const directoryDialogResult = await dialog.showOpenDialog(browserWindow, {
-        title: "Select the directory containing the projects being compared",
-        properties: ["openDirectory"]
-    });
-    const didInputDirectory = !directoryDialogResult.canceled
-        && directoryDialogResult.filePaths
-        && directoryDialogResult.filePaths.length > 0;
-    if (!didInputDirectory) {
-        return;
-    }
-    const directoryPath = directoryDialogResult.filePaths[0];
-
-    const verdictsDialogResult = await dialog.showOpenDialog(browserWindow, {
-        title: "Select the file in which to save the match verdicts "
-            + "(accept/reject).",
-        showOverwriteConfirmation: false,
-        filters: [
-            { name: "Verdicts File", extensions: ["json"] },
-            { name: "", extensions: ["*"] },
-        ],
-    });
-    const didInputVerdictsFile = !verdictsDialogResult.canceled
-        && verdictsDialogResult.filePaths
-        && verdictsDialogResult.filePaths.length > 0;
-    if (!didInputVerdictsFile) {
-        return;
-    }
-    const verdictsFilePath = verdictsDialogResult.filePaths[0];
-
-    browserWindow.webContents.send("open-file", {
-        fileName: path.basename(filePath),
-        filePath,
-        fileContents,
-        verdictsFilePath,
-        directoryPath,
-    });
 }

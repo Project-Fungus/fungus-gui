@@ -7,7 +7,17 @@ let currentVerdictSet = new VerdictSet();
 let verdictsFilePath = null;
 
 contextBridge.exposeInMainWorld("electronApi", {
-    onOpenFile: (callback) => ipcRenderer.on("open-file", callback),
+    onShowOpenFilesView: (callback) => {
+        ipcRenderer.on("show-open-files-view", callback);
+    },
+    onShowProjectPairsView: (callback) => {
+        ipcRenderer.on("show-project-pairs-view", callback);
+    },
+    onShowWarningsView: (callback) => {
+        ipcRenderer.on("show-warnings-view", callback);
+    },
+    showOpenDialog,
+    showSaveDialog,
     readFile,
     loadVerdicts,
     markNoMatch,
@@ -15,6 +25,14 @@ contextBridge.exposeInMainWorld("electronApi", {
     markPlagiarism,
     getVerdict
 });
+
+async function showOpenDialog(options) {
+    return await ipcRenderer.invoke("dialog:showOpenDialog", options);
+}
+
+async function showSaveDialog(options) {
+    return await ipcRenderer.invoke("dialog:showSaveDialog", options);
+}
 
 async function readFile(directoryPath, filePath) {
     const combinedPath = path.join(directoryPath, filePath);
