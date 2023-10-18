@@ -1,6 +1,6 @@
 class VerdictSet {
     constructor(verdicts) {
-        this._verdicts = verdicts || {};
+        this.verdicts = verdicts || {};
     }
 
     /**
@@ -43,13 +43,13 @@ class VerdictSet {
      */
     getVerdict(location1, location2) {
         const key1 = this._getKey(location1, location2);
-        const verdict1 = this._verdicts[key1];
+        const verdict1 = this.verdicts[key1];
         if (verdict1) {
             return verdict1;
         }
 
         const key2 = this._getKey(location2, location1);
-        const verdict2 = this._verdicts[key2];
+        const verdict2 = this.verdicts[key2];
         return verdict2 || "unknown";
     }
 
@@ -75,21 +75,21 @@ class VerdictSet {
             return new VerdictSet();
         }
         const r = JSON.parse(serializedData);
-        return new VerdictSet(r._verdicts);
+        return new VerdictSet(r.verdicts);
     }
 
     _getKey(location1, location2) {
-        const f1 = location1.file.replace("/", "\\/");
-        const f2 = location2.file.replace("/", "\\/");
-        return `${f1}/${location1.startByte}/${location1.endByte}`
-            + `/${f2}/${location2.startByte}/${location2.endByte}`;
+        const f1 = location1.file.replace("\\", "\\\\").replace("|", "\\|");
+        const f2 = location2.file.replace("\\", "\\\\").replace("|", "\\|");
+        return `${f1}|${location1.startByte}|${location1.endByte}`
+            + `|${f2}|${location2.startByte}|${location2.endByte}`;
     }
 
     _setVerdict(location1, location2, verdict) {
         const previousVerdict = this.getVerdict(location1, location2);
         if (previousVerdict === "unknown" || previousVerdict === verdict) {
             const key = this._getKey(location1, location2);
-            this._verdicts[key] = verdict;
+            this.verdicts[key] = verdict;
         }
         else {
             throw "Contradictory verdicts.";
