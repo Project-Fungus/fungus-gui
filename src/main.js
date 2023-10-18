@@ -86,6 +86,7 @@ function createApplicationMenu() {
                 { role: "zoomOut" },
                 { role: "resetZoom" },
                 { role: "togglefullscreen" },
+                { type: "separator" },
                 { role: "toggleDevTools" },
             ]
         }
