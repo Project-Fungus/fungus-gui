@@ -44,30 +44,9 @@ class Warning {
      * @param {string} message
      */
     constructor(warnType, file, message) {
-        this._warnType = warnType;
-        this._file = file;
-        this._message = message;
-    }
-
-    /**
-     * @type string
-     */
-    get warnType() {
-        return this._warnType;
-    }
-
-    /**
-     * @type string
-     */
-    get file() {
-        return this._file;
-    }
-
-    /**
-     * @type string
-     */
-    get message() {
-        return this._message;
+        this.warnType = warnType;
+        this.file = file;
+        this.message = message;
     }
 }
 
