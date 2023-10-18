@@ -1,7 +1,4 @@
 {
-  "metadata": {
-    "num_project_pairs": 2
-  },
   "warnings": [
     {
       "file": ".DS_Store",
@@ -18,136 +15,223 @@
     {
       "project1": "Project 1",
       "project2": "Project 2",
-      "num_matches": 3,
       "matches": [
         {
-          "project1_occurrences": [
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 322,
-                "end": 801
-              }
-            },
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 951,
-                "end": 1430
-              }
-            },
-            {
-              "file": "Project 1/file2.s",
-              "span": {
-                "start": 128,
-                "end": 606
-              }
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 322,
+              "end": 801
             }
-          ],
-          "project2_occurrences": [
-            {
-              "file": "Project 2/code1.s",
-              "span": {
-                "start": 594,
-                "end": 1072
-              }
-            },
-            {
-              "file": "Project 2/code2.s",
-              "span": {
-                "start": 252,
-                "end": 730
-              }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 594,
+              "end": 1072
             }
-          ]
+          }
         },
         {
-          "project1_occurrences": [
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 1703,
-                "end": 1737
-              }
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 322,
+              "end": 801
             }
-          ],
-          "project2_occurrences": [
-            {
-              "file": "Project 2/code1.s",
-              "span": {
-                "start": 1094,
-                "end": 1128
-              }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 594,
+              "end": 1072
             }
-          ]
+          }
         },
         {
-          "project1_occurrences": [
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 1866,
-                "end": 1889
-              }
-            },
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 1877,
-                "end": 1900
-              }
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 951,
+              "end": 1430
             }
-          ],
-          "project2_occurrences": [
-            {
-              "file": "Project 2/code1.s",
-              "span": {
-                "start": 1723,
-                "end": 1746
-              }
-            },
-            {
-              "file": "Project 2/code1.s",
-              "span": {
-                "start": 1734,
-                "end": 1757
-              }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 594,
+              "end": 1072
             }
-          ]
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 951,
+              "end": 1430
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code2.s",
+            "span": {
+              "start": 252,
+              "end": 730
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file2.s",
+            "span": {
+              "start": 128,
+              "end": 606
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 594,
+              "end": 1072
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file2.s",
+            "span": {
+              "start": 128,
+              "end": 606
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code2.s",
+            "span": {
+              "start": 252,
+              "end": 730
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1703,
+              "end": 1737
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 1094,
+              "end": 1128
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1866,
+              "end": 1889
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 1723,
+              "end": 1746
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1866,
+              "end": 1889
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 1734,
+              "end": 1757
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1877,
+              "end": 1900
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 1723,
+              "end": 1746
+            }
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1877,
+              "end": 1900
+            }
+          },
+          "project_2_location": {
+            "file": "Project 2/code1.s",
+            "span": {
+              "start": 1734,
+              "end": 1757
+            }
+          }
         }
       ]
     },
     {
       "project1": "Project 1",
       "project2": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss",
-      "num_matches": 1,
       "matches": [
         {
-          "project1_occurrences": [
-            {
-              "file": "Project 1/file1.s",
-              "span": {
-                "start": 1452,
-                "end": 1697
-              }
+          "project_1_location": {
+            "file": "Project 1/file1.s",
+            "span": {
+              "start": 1452,
+              "end": 1697
             }
-          ],
-          "project2_occurrences": [
-            {
-              "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/An incredibly-frustratingly-unfairly long subdirectory name why would the student do this didnt they read the instructions nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo/nonexistent-file.s",
-              "span": {
-                "start": 0,
-                "end": 42
-              }
-            },
-            {
-              "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/Yet another ridiculously long subdirectory name why would the student do this come onnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/file.s",
-              "span": {
-                "start": 0,
-                "end": 245
-              }
+          },
+          "project_2_location": {
+            "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/An incredibly-frustratingly-unfairly long subdirectory name why would the student do this didnt they read the instructions nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo/nonexistent-file.s",
+            "span": {
+              "start": 0,
+              "end": 42
             }
-          ]
+          }
+        },
+        {
+          "project_1_location": {
+            "file": "Project 3 but its name is super-duper-extra-uber-mega-giga-extraordinarily-absurdly-hilariously-outrageously long why is this so long aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa yikessssssssssssssssssssssssssss/Yet another ridiculously long subdirectory name why would the student do this come onnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/file.s",
+            "span": {
+              "start": 0,
+              "end": 245
+            }
+          }
+        }
+      ]
+    },
+    {
+      "project1": "Another project",
+      "project2": "Yet another project",
+      "matches": [
+        {
+          "foo": 1,
+          "bar": null
         }
       ]
     }
