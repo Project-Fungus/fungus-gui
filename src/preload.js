@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld("electronApi", {
     showOpenDialog,
     showSaveDialog,
     readFile,
+    readUserData,
+    writeUserData,
     loadVerdicts,
     markNoMatch,
     markMatchWithoutPlagiarism,
@@ -37,6 +39,18 @@ async function showSaveDialog(options) {
 async function readFile(directoryPath, filePath) {
     const combinedPath = path.join(directoryPath, filePath);
     return await fs.readFile(combinedPath, "utf-8");
+}
+
+async function readUserData(filename) {
+    const userDataFolder = await ipcRenderer.invoke("app:getPath", "userData");
+    const filePath = path.join(userDataFolder, filename);
+    return await fs.readFile(filePath, "utf-8");
+}
+
+async function writeUserData(filename, data) {
+    const userDataFolder = await ipcRenderer.invoke("app:getPath", "userData");
+    const filePath = path.join(userDataFolder, filename);
+    await fs.writeFile(filePath, data, "utf-8");
 }
 
 async function loadVerdicts(filePath) {

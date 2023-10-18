@@ -26,6 +26,7 @@ app.whenReady().then(() => {
         const noInput = result.canceled || !result.filePath;
         return noInput ? null : result.filePaths;
     });
+    ipcMain.handle("app:getPath", (_, name) => app.getPath(name));
 });
 
 app.on("window-all-closed", () => {

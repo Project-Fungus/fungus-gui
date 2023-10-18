@@ -98,7 +98,7 @@ class GuiState {
 
 let state = new GuiState();
 
-window.addEventListener("DOMContentLoaded", function () {
+window.addEventListener("DOMContentLoaded", async () => {
     window.electronApi.onShowOpenFilesView(() => showView("open-files"));
     window.electronApi.onShowProjectPairsView(() => showView("project-pairs"));
     window.electronApi.onShowWarningsView(() => showView("warnings"));
@@ -122,6 +122,8 @@ window.addEventListener("DOMContentLoaded", function () {
         "click", markMatchWithoutPlagiarism);
     document.getElementById("plagiarism-btn").addEventListener(
         "click", markPlagiarism);
+
+    await showView("open-files");
 });
 
 // Call this function when switching views (e.g., from project pairs view to
@@ -135,6 +137,7 @@ async function showView(view) {
         projectPairsView.className = "hide";
         warningsView.className = "hide";
         openFilesView.className = "show";
+        await showOpenFilesView();
     }
     else if (view === "project-pairs") {
         openFilesView.className = "hide";
@@ -151,6 +154,22 @@ async function showView(view) {
 }
 
 /* OPEN FILES --------------------------------------------------------------- */
+
+async function showOpenFilesView() {
+    const previousPaths = await _readPreviousPaths();
+    if (previousPaths.plagiarismResultsFile) {
+        document.getElementById("plagiarism-results-file-path").innerText =
+            previousPaths.plagiarismResultsFile;
+    }
+    if (previousPaths.projectsDirectory) {
+        document.getElementById("projects-directory-path").innerText =
+            previousPaths.projectsDirectory;
+    }
+    if (previousPaths.verdictsFile) {
+        document.getElementById("verdicts-file-path").innerText =
+            previousPaths.verdictsFile;
+    }
+}
 
 async function openFiles() {
     const plagiarismResultsFile =
@@ -196,7 +215,7 @@ async function openFiles() {
         return;
     }
 
-    const fileContents = await document.electronApi
+    const fileContents = await window.electronApi
         .readFile("", plagiarismResultsFile);
     let plagiarismResults;
     try {
@@ -220,12 +239,10 @@ async function openFiles() {
         projectsDirectory,
         plagiarismResults.project_pairs,
         plagiarismResults.warnings);
-
     await window.electronApi.loadVerdicts(verdictsFile);
-
     document.getElementById("document-title").innerText = plagiarismResultsFile;
-
     document.getElementById("open-files-error-msg").classList.add("hide");
+    _savePaths(plagiarismResultsFile, projectsDirectory, verdictsFile);
 
     await showView("project-pairs");
 }
@@ -280,6 +297,54 @@ async function selectVerdictsFile() {
     if (!path) return;
 
     document.getElementById("verdicts-file-path").innerText = path;
+}
+
+/**
+ * Tries to read the previous file paths that the user opened.
+ *
+ * @returns {{
+ *      plagiarismResultsFile: string | null,
+ *      projectsDirectory: string | null,
+ *      verdictsFile: string | null
+ * }}
+ */
+async function _readPreviousPaths() {
+    try {
+        const stringifiedData = await window.electronApi.readUserData(
+            "previous_paths.json");
+        const data = JSON.parse(stringifiedData);
+        console.log(data);
+        return data;
+    }
+    catch (e) {
+        console.log(e);
+        return {
+            plagiarismResultsFile: null,
+            projectsDirectory: null,
+            verdictsFile: null
+        };
+    }
+}
+
+/**
+ * Tries to save the file paths that the user just opened.
+ *
+ * @param {string} plagiarismResultsFile
+ * @param {string} projectsDirectory
+ * @param {string} verdictsFile
+ */
+async function _savePaths(plagiarismResultsFile, projectsDirectory,
+    verdictsFile) {
+
+    try {
+        const data = { plagiarismResultsFile, projectsDirectory, verdictsFile };
+        const stringifiedData = JSON.stringify(data);
+        await window.electronApi.writeUserData(
+            "previous_paths.json", stringifiedData);
+    }
+    catch (e) {
+        console.log(e);
+    }
 }
 
 /* PROJECT PAIRS ------------------------------------------------------------ */
