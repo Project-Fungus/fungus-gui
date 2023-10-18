@@ -313,7 +313,6 @@ async function _readPreviousPaths() {
         const stringifiedData = await window.electronApi.readUserData(
             "previous_paths.json");
         const data = JSON.parse(stringifiedData);
-        console.log(data);
         return data;
     }
     catch (e) {
@@ -872,7 +871,7 @@ function _convertProjectPairs(projectPairsFromFile, fileName) {
             continue;
         }
 
-        const { matches, warnings } = _convertMatches(pp.matches, fileName);
+        const { matches, warnings } = _convertMatches(pp.matches, fileName, i);
         allWarnings = allWarnings.concat(warnings);
         if (matches.length === 0) {
             allWarnings.push(new Warning(
@@ -914,7 +913,7 @@ function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
                 fileName,
                 `[Project pair at index ${projectPairIndex}, match at index `
                 + `${i}] Missing or invalid attributes: `
-                + `${badAttributes.join(", ")}. That match has been`
+                + `${badAttributes.join(", ")}. This match has been `
                 + "discarded."));
             continue;
         }

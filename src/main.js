@@ -24,7 +24,7 @@ app.whenReady().then(() => {
         const browserWindow = BrowserWindow.fromWebContents(event.sender);
         const result = await dialog.showSaveDialog(browserWindow, options);
         const noInput = result.canceled || !result.filePath;
-        return noInput ? null : result.filePaths;
+        return noInput ? null : result.filePath;
     });
     ipcMain.handle("app:getPath", (_, name) => app.getPath(name));
 });
