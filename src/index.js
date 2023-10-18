@@ -775,12 +775,15 @@ function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
 
 /**
  * @param {{file: string, span: {start: number, end: number}}} locationFromFile
+ * @param {string} fileName
  * @param {number} projectPairIndex
  * @param {number} matchIndex
  * @param {number} projectNumber
  * @returns {{location: CodeLocation, warnings: [Warning]}}
  */
-function _convertLocation(locationFromFile, projectPairIndex, matchIndex, projectNumber) {
+function _convertLocation(locationFromFile, fileName, projectPairIndex,
+    matchIndex, projectNumber) {
+
     const badAttributes = [];
     if (!locationFromFile.file) {
         badAttributes.push("file");
