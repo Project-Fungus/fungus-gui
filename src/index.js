@@ -6,8 +6,8 @@ class ProjectPair {
      * @param {number} totalNumMatches
      */
     constructor(project1Name, project2Name, matches, totalNumMatches) {
-        this.project1Name = String(project1Name);
-        this.project2Name = String(project2Name);
+        this.project1Name = project1Name;
+        this.project2Name = project2Name;
         this.matches = matches;
         this.totalNumMatches = totalNumMatches;
     }
