@@ -5,10 +5,16 @@
         "commonjs": true,
         "es2021": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended",
+        "plugin:jest/recommended"
+    ],
     "parserOptions": {
         "ecmaVersion": "latest"
     },
+    "plugins": [
+        "jest"
+    ],
     "rules": {
         "indent": [
             "error",
@@ -27,6 +33,9 @@
             "always"
         ],
         "max-len": [
+            "warn"
+        ],
+        "no-trailing-spaces": [
             "warn"
         ]
     }

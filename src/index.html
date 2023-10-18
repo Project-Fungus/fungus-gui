@@ -20,76 +20,81 @@
     </header>
     <hr />
     <main>
-        <p id="no-results-msg">No matches were found.</p>
-        <div id="outer-project-pair-container">
-            <div id="project-pair-list" class="vertical-container">
-                <!-- Project pairs go here. For example: -->
-                <!-- <div id="project-pair0" class="project-pair">
-                    <p>Example project 1</p>
-                    <p>Example project 2</p>
-                    <p>1 match</p>
-                </div> -->
-            </div>
-            <div id="project-pair-container" class="vertical-container">
-                <div>
-                    <button id="prev-match-btn">&lt;</button>
-                    <span id="match-count">Match 0/0</span>
-                    <button id="next-match-btn">&gt;</button>
+        <!-- PROJECT PAIRS -->
+        <div id="project-pairs-view" class="hide">
+            <p id="no-results-msg">No matches were found.</p>
+            <div id="outer-project-pair-container">
+                <div id="project-pair-list">
+                    <!-- Project pairs go here. For example: -->
+                    <!-- <div id="project-pair0" class="project-pair">
+                        <p>Example project 1</p>
+                        <p>Example project 2</p>
+                        <p>1 match</p>
+                    </div> -->
                 </div>
-                <div id="project-code-container">
-                    <div id="project1-container" class="vertical-container">
-                        <span id="project1-filename"></span>
-                        <pre id="project1-code">
-                            <!-- Project 1 code goes here. For example: -->
-                            <!-- #include &lt;stdio.h&gt;
-
-int main() {
-    printf("Hello there!");
-    <span class="unselected-highlighted">return 0</span>;
-} -->
-                        </pre>
-                        <div id="project1-other-occurrences-container">
-                            <span>Other examples of this code in this project:</span>
-                            <ul id="project1-other-occurrences"></ul>
+                <div id="project-pair-container">
+                    <div id="match-header">
+                        <div>
+                            <button id="prev-match-btn">&lt;</button>
+                            <span id="match-count">Match 0/0</span>
+                            <button id="next-match-btn">&gt;</button>
+                        </div>
+                        <div>
+                            <span id="match-verdict"></span>
+                            <button id="no-match-btn">No Match &#10008;</button>
+                            <button id="match-without-plagiarism-btn">Match Without Plagiarism &#10008;</button>
+                            <button id="plagiarism-btn">Plagiarism &#10004;</button>
                         </div>
                     </div>
-                    <div id="project2-container" class="vertical-container">
-                        <span id="project2-filename"></span>
-                        <pre id="project2-code">
-                            <!-- Project 1 code goes here. For example: -->
-                            <!-- #include &lt;stdio.h&gt;
+                    <div id="project-code-container">
+                        <div id="project1-container">
+                            <span id="project1-filename"></span>
+                            <pre id="project1-code">
+                                <!-- Project 1 code goes here. For example: -->
+                                <!-- #include &lt;stdio.h&gt;
 
 int main() {
     printf("Hello there!");
     <span class="unselected-highlighted">return 0</span>;
 } -->
-                        </pre>
-                        <div id="project2-other-occurrences-container">
-                            <span>Other examples of this code in this project:</span>
-                            <ul id="project2-other-occurrences"></ul>
+                            </pre>
+                        </div>
+                        <div id="project2-container">
+                            <span id="project2-filename"></span>
+                            <pre id="project2-code">
+                                <!-- Project 1 code goes here. For example: -->
+                                <!-- #include &lt;stdio.h&gt;
+
+int main() {
+    printf("Hello there!");
+    <span class="unselected-highlighted">return 0</span>;
+} -->
+                            </pre>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <p id="no-warnings-msg">There are no warnings to show.</p>
-        <div id="warnings-container">
-            <table id="warnings-table">
-                <tbody id="warnings-tbody">
-                    <tr id="warnings-tbody-header">
-                        <th>Type</th>
-                        <th>File</th>
-                        <th>Message</th>
-                    </tr>
-                    <!-- Warnings go here. For example: -->
-                    <!-- <tr>
-                        <td>Input</td>
-                        <td>Project 1/.DS_Store</td>
-                        <td>stream did not contain valid UTF-8</td>
-                    </tr> -->
-                </tbody>
-            </table>
+        <!-- WARNINGS -->
+        <div id="warnings-view" class="hide">
+            <p id="no-warnings-msg">There are no warnings to show.</p>
+            <div id="warnings-container">
+                <table id="warnings-table">
+                    <tbody id="warnings-tbody">
+                        <tr id="warnings-tbody-header">
+                            <th>Type</th>
+                            <th>File</th>
+                            <th>Message</th>
+                        </tr>
+                        <!-- Warnings go here. For example: -->
+                        <!-- <tr>
+                            <td>Input</td>
+                            <td>Project 1/.DS_Store</td>
+                            <td>stream did not contain valid UTF-8</td>
+                        </tr> -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 </body>

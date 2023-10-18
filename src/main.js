@@ -1,7 +1,10 @@
-const { app, BrowserWindow, Menu, dialog } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 
+ipcMain.handle("dialog:showErrorBox", (_, options) => {
+    dialog.showErrorBox(options.title || "Error", options.content);
+});
 app.whenReady().then(() => {
     createApplicationMenu();
     createWindow();
@@ -82,7 +85,7 @@ async function openFile(browserWindow) {
     });
     const didInputFile = !fileDialogResult.canceled
         && fileDialogResult.filePaths
-        && fileDialogResult.filePaths.length >= 0;
+        && fileDialogResult.filePaths.length > 0;
     if (!didInputFile) {
         return;
     }
@@ -108,15 +111,34 @@ async function openFile(browserWindow) {
     });
     const didInputDirectory = !directoryDialogResult.canceled
         && directoryDialogResult.filePaths
-        && directoryDialogResult.filePaths.length >= 0;
+        && directoryDialogResult.filePaths.length > 0;
     if (!didInputDirectory) {
         return;
     }
     const directoryPath = directoryDialogResult.filePaths[0];
 
+    const verdictsDialogResult = await dialog.showOpenDialog(browserWindow, {
+        title: "Select the file in which to save the match verdicts "
+            + "(accept/reject).",
+        showOverwriteConfirmation: false,
+        filters: [
+            { name: "Verdicts File", extensions: ["json"] },
+            { name: "", extensions: ["*"] },
+        ],
+    });
+    const didInputVerdictsFile = !verdictsDialogResult.canceled
+        && verdictsDialogResult.filePaths
+        && verdictsDialogResult.filePaths.length > 0;
+    if (!didInputVerdictsFile) {
+        return;
+    }
+    const verdictsFilePath = verdictsDialogResult.filePaths[0];
+
     browserWindow.webContents.send("open-file", {
-        filePath: filePath,
-        fileContents: fileContents,
-        directoryPath: directoryPath,
+        fileName: path.basename(filePath),
+        filePath,
+        fileContents,
+        verdictsFilePath,
+        directoryPath,
     });
 }
