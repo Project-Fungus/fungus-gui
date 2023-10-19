@@ -121,19 +121,19 @@ main {
 
 #warnings-view {
     width: 100%;
-    height: 100%;
     margin: 0;
+    padding: 0;
     overflow: auto;
 }
 
 #no-warnings-msg {
+    margin: 0;
     padding: var(--outer-padding);
     box-sizing: border-box;
 }
 
 #warnings-container {
     width: 100%;
-    height: 100%;
     margin: 0;
     padding: var(--outer-padding);
     box-sizing: border-box;
