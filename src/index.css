@@ -89,6 +89,13 @@ main {
     justify-content: space-between;
 }
 
+#verdicts-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 5px;
+}
+
 #project-code-container {
     flex-grow: 1;
     min-height: 0;
@@ -209,13 +216,13 @@ pre {
     font-size: medium;
 }
 
-#no-match-btn {
+#no-plagiarism-btn {
     color: red;
     border: 1px solid red;
     border-radius: 5px;
 }
 
-#match-without-plagiarism-btn {
+#potential-plagiarism-btn {
     color: orange;
     border: 1px solid orange;
     border-radius: 5px;
@@ -227,14 +234,14 @@ pre {
     border-radius: 5px;
 }
 
-#no-match-btn:hover,
-#match-without-plagiarism-btn:hover,
+#no-plagiarism-btn:hover,
+#potential-plagiarism-btn:hover,
 #plagiarism-btn:hover {
     background-color: darkgrey;
 }
 
-#no-match-btn:active,
-#match-without-plagiarism-btn:active,
+#no-plagiarism-btn:active,
+#potential-plagiarism-btn:active,
 #plagiarism-btn:active {
     background-color: inherit;
 }

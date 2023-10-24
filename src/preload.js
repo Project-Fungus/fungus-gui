@@ -22,9 +22,7 @@ contextBridge.exposeInMainWorld("electronApi", {
     readUserData,
     writeUserData,
     loadVerdicts,
-    markNoMatch,
-    markMatchWithoutPlagiarism,
-    markPlagiarism,
+    setVerdict,
     getVerdict
 });
 
@@ -78,18 +76,8 @@ async function loadVerdicts(filePath) {
     }
 }
 
-async function markNoMatch(location1, location2) {
-    currentVerdictSet.markNoMatch(location1, location2);
-    await _saveVerdicts(currentVerdictSet, verdictsFilePath);
-}
-
-async function markMatchWithoutPlagiarism(location1, location2) {
-    currentVerdictSet.markMatchWithoutPlagiarism(location1, location2);
-    await _saveVerdicts(currentVerdictSet, verdictsFilePath);
-}
-
-async function markPlagiarism(location1, location2) {
-    currentVerdictSet.markPlagiarism(location1, location2);
+async function setVerdict(location1, location2, verdict) {
+    currentVerdictSet.setVerdict(location1, location2, verdict);
     await _saveVerdicts(currentVerdictSet, verdictsFilePath);
 }
 

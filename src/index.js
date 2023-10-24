@@ -116,10 +116,10 @@ window.addEventListener("DOMContentLoaded", async () => {
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
         "click", selectNextMatch);
-    document.getElementById("no-match-btn").addEventListener(
-        "click", markNoMatch);
-    document.getElementById("match-without-plagiarism-btn").addEventListener(
-        "click", markMatchWithoutPlagiarism);
+    document.getElementById("no-plagiarism-btn").addEventListener(
+        "click", markNoPlagiarism);
+    document.getElementById("potential-plagiarism-btn").addEventListener(
+        "click", markPotentialPlagiarism);
     document.getElementById("plagiarism-btn").addEventListener(
         "click", markPlagiarism);
 
@@ -469,58 +469,58 @@ async function selectNextMatch() {
 }
 
 function showMatchVerdict() {
-    const noMatchButton = document.getElementById("no-match-btn");
-    const matchWithoutPlagiarismButton
-        = document.getElementById("match-without-plagiarism-btn");
+    const noPlagiarismButton = document.getElementById("no-plagiarism-btn");
+    const potentialPlagiarismButton
+        = document.getElementById("potential-plagiarism-btn");
     const plagiarismButton = document.getElementById("plagiarism-btn");
     const verdictText = document.getElementById("match-verdict");
 
     const verdict = window.electronApi.getVerdict(
         state.currentMatch.location1, state.currentMatch.location2);
-    if (verdict === "no-match") {
-        verdictText.innerHTML = "No Match &#10008;";
-        noMatchButton.className = "hide";
-        matchWithoutPlagiarismButton.className = "hide";
+    if (verdict === "no-plagiarism") {
+        verdictText.innerHTML = "No Plagiarism (&#10008;)";
+        noPlagiarismButton.className = "hide";
+        potentialPlagiarismButton.className = "hide";
         plagiarismButton.className = "hide";
         verdictText.className = "show";
     }
-    else if (verdict === "match-without-plagiarism") {
-        verdictText.innerHTML = "Match Without Plagiarism &#10008;";
-        noMatchButton.className = "hide";
-        matchWithoutPlagiarismButton.className = "hide";
+    else if (verdict === "potential-plagiarism") {
+        verdictText.innerHTML = "Potential Plagiarism (?)";
+        noPlagiarismButton.className = "hide";
+        potentialPlagiarismButton.className = "hide";
         plagiarismButton.className = "hide";
         verdictText.className = "show";
     }
     else if (verdict === "plagiarism") {
-        verdictText.innerHTML = "Plagiarism &#10004;";
-        noMatchButton.className = "hide";
-        matchWithoutPlagiarismButton.className = "hide";
+        verdictText.innerHTML = "Plagiarism (&#10004;)";
+        noPlagiarismButton.className = "hide";
+        potentialPlagiarismButton.className = "hide";
         plagiarismButton.className = "hide";
         verdictText.className = "show";
     }
     else {
         verdictText.className = "hide";
-        noMatchButton.className = "show";
-        matchWithoutPlagiarismButton.className = "show";
+        noPlagiarismButton.className = "show";
+        potentialPlagiarismButton.className = "show";
         plagiarismButton.className = "show";
     }
 }
 
-async function markNoMatch() {
-    await window.electronApi.markNoMatch(
-        state.currentMatch.location1, state.currentMatch.location2);
+async function markNoPlagiarism() {
+    await window.electronApi.setVerdict(state.currentMatch.location1,
+        state.currentMatch.location2, "no-plagiarism");
     await showProjectPairView();
 }
 
-async function markMatchWithoutPlagiarism() {
-    await window.electronApi.markMatchWithoutPlagiarism(
-        state.currentMatch.location1, state.currentMatch.location2);
+async function markPotentialPlagiarism() {
+    await window.electronApi.setVerdict(state.currentMatch.location1,
+        state.currentMatch.location2, "potential-plagiarism");
     await showProjectPairView();
 }
 
 async function markPlagiarism() {
-    await window.electronApi.markPlagiarism(
-        state.currentMatch.location1, state.currentMatch.location2);
+    await window.electronApi.setVerdict(state.currentMatch.location1,
+        state.currentMatch.location2, "plagiarism");
     await showProjectPairView();
 }
 
@@ -772,8 +772,11 @@ function _filterProjectPairsByVerdict(projectPairs) {
 }
 
 function _filterMatchesByVerdict(matches) {
+    // TODO: Let the user change this
+    const verdictsToShow = new Set(["no-verdict"]);
     return matches.filter((m) =>
-        window.electronApi.getVerdict(m.location1, m.location2) === "unknown");
+        verdictsToShow.has(
+            window.electronApi.getVerdict(m.location1, m.location2)));
 }
 
 /* WARNINGS ----------------------------------------------------------------- */

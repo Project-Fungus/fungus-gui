@@ -1,37 +1,58 @@
+function _getKey(location1, location2) {
+    const f1 = location1.file.replace("\\", "\\\\").replace("|", "\\|");
+    const f2 = location2.file.replace("\\", "\\\\").replace("|", "\\|");
+    const key1 = `${f1}|${location1.startByte}|${location1.endByte}`;
+    const key2 = `${f2}|${location2.startByte}|${location2.endByte}`;
+    return key1.localeCompare(key2) <= 0
+        ? `${key1}|${key2}`
+        : `${key2}|${key1}`;
+}
+
+function _isLocationValid(location) {
+    if (!location) return false;
+
+    if (typeof (location.file) !== "string"
+        && !(location.file instanceof String)) return false;
+    if (!location.file) return false;
+
+    if (typeof location.startByte !== "number") return false;
+    if (location.startByte < 0) return false;
+
+    if (typeof location.endByte !== "number") return false;
+    if (location.endByte <= 0) return false;
+
+    return true;
+}
+
+const _VALID_VERDICTS = new Set([
+    "no-plagiarism", "potential-plagiarism", "plagiarism"
+]);
+
 class VerdictSet {
     constructor(verdicts) {
         this.verdicts = verdicts || {};
     }
 
     /**
-     * Mark a pair of code snippets as being different.
+     * Sets the verdict for the given pair of code snippets.
      *
      * @param {{file: string, startByte: number, endByte: number}} location1
      * @param {{file: string, startByte: number, endByte: number}} location2
+     * @param {("no-plagiarism"|"potential-plagiarism"|"plagiarism")} verdict
      */
-    markNoMatch(location1, location2) {
-        this._setVerdict(location1, location2, "no-match");
-    }
+    setVerdict(location1, location2, verdict) {
+        if (!_isLocationValid(location1)) {
+            throw `Invalid location ${JSON.stringify(location1)}.`;
+        }
+        if (!_isLocationValid(location2)) {
+            throw `Invalid location ${JSON.stringify(location2)}.`;
+        }
+        if (!_VALID_VERDICTS.has(verdict)) {
+            throw `Invalid verdict '${verdict}'.`;
+        }
 
-    /**
-     * Mark a pair of code snippets as being the same, but *not* being
-     * plagiarism.
-     *
-     * @param {{file: string, startByte: number, endByte: number}} location1
-     * @param {{file: string, startByte: number, endByte: number}} location2
-     */
-    markMatchWithoutPlagiarism(location1, location2) {
-        this._setVerdict(location1, location2, "match-without-plagiarism");
-    }
-
-    /**
-     * Mark a pair of code snippets as being plagiarized.
-     *
-     * @param {{file: string, startByte: number, endByte: number}} location1
-     * @param {{file: string, startByte: number, endByte: number}} location2
-     */
-    markPlagiarism(location1, location2) {
-        this._setVerdict(location1, location2, "plagiarism");
+        const key = _getKey(location1, location2);
+        this.verdicts[key] = verdict;
     }
 
     /**
@@ -39,18 +60,14 @@ class VerdictSet {
      *
      * @param {{file: string, startByte: number, endByte: number}} location1
      * @param {{file: string, startByte: number, endByte: number}} location2
-     * @returns {("no-match"|"match-without-plagiarism"|"plagiarism"|"unknown")}
+     * @returns {
+     *      ("no-verdict"|"no-plagiarism"|"potential-plagiarism"|"plagiarism")
+     * }
      */
     getVerdict(location1, location2) {
-        const key1 = this._getKey(location1, location2);
-        const verdict1 = this.verdicts[key1];
-        if (verdict1) {
-            return verdict1;
-        }
-
-        const key2 = this._getKey(location2, location1);
-        const verdict2 = this.verdicts[key2];
-        return verdict2 || "unknown";
+        const key = _getKey(location2, location1);
+        const verdict2 = this.verdicts[key];
+        return verdict2 || "no-verdict";
     }
 
     /**
@@ -76,24 +93,6 @@ class VerdictSet {
         }
         const r = JSON.parse(serializedData);
         return new VerdictSet(r.verdicts);
-    }
-
-    _getKey(location1, location2) {
-        const f1 = location1.file.replace("\\", "\\\\").replace("|", "\\|");
-        const f2 = location2.file.replace("\\", "\\\\").replace("|", "\\|");
-        return `${f1}|${location1.startByte}|${location1.endByte}`
-            + `|${f2}|${location2.startByte}|${location2.endByte}`;
-    }
-
-    _setVerdict(location1, location2, verdict) {
-        const previousVerdict = this.getVerdict(location1, location2);
-        if (previousVerdict === "unknown" || previousVerdict === verdict) {
-            const key = this._getKey(location1, location2);
-            this.verdicts[key] = verdict;
-        }
-        else {
-            throw "Contradictory verdicts.";
-        }
     }
 }
 
