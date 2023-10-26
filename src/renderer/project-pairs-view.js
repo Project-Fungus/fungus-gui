@@ -290,7 +290,6 @@ async function cancelMatchFilters() {
     document.getElementById("filter-matches-dialog").close();
 }
 
-// TODO: Update this to let the user change their mind
 function showMatchVerdict() {
     const noPlagiarismButton = document.getElementById("no-plagiarism-btn");
     const potentialPlagiarismButton
@@ -302,30 +301,27 @@ function showMatchVerdict() {
         state.currentMatch.location1, state.currentMatch.location2);
     if (verdict === "no-plagiarism") {
         verdictText.innerHTML = "No Plagiarism (&#10008;)";
-        noPlagiarismButton.classList.add("hide");
-        potentialPlagiarismButton.classList.add("hide");
-        plagiarismButton.classList.add("hide");
-        verdictText.classList.remove("hide");
+        _setVerdictButtonEmphasis(noPlagiarismButton, true);
+        _setVerdictButtonEmphasis(potentialPlagiarismButton, false);
+        _setVerdictButtonEmphasis(plagiarismButton, false);
     }
     else if (verdict === "potential-plagiarism") {
-        verdictText.innerHTML = "Potential Plagiarism (?)";
-        noPlagiarismButton.classList.add("hide");
-        potentialPlagiarismButton.classList.add("hide");
-        plagiarismButton.classList.add("hide");
-        verdictText.classList.remove("hide");
+        verdictText.innerHTML = "Potential Plagiarism (<b><i>?</i></b>)";
+        _setVerdictButtonEmphasis(noPlagiarismButton, false);
+        _setVerdictButtonEmphasis(potentialPlagiarismButton, true);
+        _setVerdictButtonEmphasis(plagiarismButton, false);
     }
     else if (verdict === "plagiarism") {
         verdictText.innerHTML = "Plagiarism (&#10004;)";
-        noPlagiarismButton.classList.add("hide");
-        potentialPlagiarismButton.classList.add("hide");
-        plagiarismButton.classList.add("hide");
-        verdictText.classList.remove("hide");
+        _setVerdictButtonEmphasis(noPlagiarismButton, false);
+        _setVerdictButtonEmphasis(potentialPlagiarismButton, false);
+        _setVerdictButtonEmphasis(plagiarismButton, true);
     }
     else {
-        verdictText.classList.add("hide");
-        noPlagiarismButton.classList.remove("hide");
-        potentialPlagiarismButton.classList.remove("hide");
-        plagiarismButton.classList.remove("hide");
+        verdictText.innerHTML = "";
+        _setVerdictButtonEmphasis(noPlagiarismButton, null);
+        _setVerdictButtonEmphasis(potentialPlagiarismButton, null);
+        _setVerdictButtonEmphasis(plagiarismButton, null);
     }
 }
 
@@ -345,6 +341,22 @@ async function markPlagiarism() {
     await window.electronApi.setVerdict(state.currentMatch.location1,
         state.currentMatch.location2, "plagiarism");
     await showProjectPairsView();
+}
+
+function _setVerdictButtonEmphasis(button, emphasized) {
+    if (emphasized === true) {
+        button.classList.add("emphasized");
+    }
+    else {
+        button.classList.remove("emphasized")
+    }
+
+    if (emphasized === false) {
+        button.classList.add("deemphasized");
+    }
+    else {
+        button.classList.remove("deemphasized");
+    }
 }
 
 async function _showCodeLocation(pane) {
