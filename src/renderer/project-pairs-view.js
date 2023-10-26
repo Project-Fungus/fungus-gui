@@ -1,6 +1,3 @@
-// TODO: Split this mess into multiple files
-// TODO: The example code seems buggy in a few ways (wrong ranges highlighted, first match duplicated)
-
 class ProjectPair {
     /**
      * @param {string} project1Name
@@ -40,36 +37,13 @@ class CodeLocation {
     }
 }
 
-class Warning {
-    /**
-     * @param {string} warnType
-     * @param {string} file
-     * @param {string} message
-     */
-    constructor(warnType, file, message) {
-        this.warnType = warnType;
-        this.file = file;
-        this.message = message;
-    }
-}
-
-class GuiState {
-    constructor(fileName, projectsDirectoryPath, projectPairs, warnings) {
-        const {
-            projectPairs: convertedProjectPairs,
-            warnings: conversionWarnings
-        } = _convertProjectPairs(projectPairs || [], fileName);
-
-        this._allProjectPairs =
-            convertedProjectPairs.sort(_compareProjectPairs);
-        this.warnings = (warnings || [])
-            .map((w) => new Warning(w.warn_type, w.file, w.message))
-            .concat(conversionWarnings)
-            .sort(_compareWarnings);
+class ProjectPairsViewState {
+    constructor(projectsDirectoryPath, projectPairs) {
+        this._allProjectPairs = projectPairs;
         this.projectsDirectoryPath = projectsDirectoryPath || "";
+
         this.currentProjectPairIndex = 0;
         this.currentMatchIndex = 0;
-
         this.verdictsToShow = new Set(["no-verdict"]);
     }
 
@@ -87,6 +61,8 @@ class GuiState {
     }
 
     get projectPairs() {
+        if (!this._allProjectPairs) return [];
+
         return this._allProjectPairs
             .map((pp) =>
                 new ProjectPair(
@@ -116,22 +92,9 @@ class GuiState {
     }
 }
 
-let state = new GuiState();
+let state = new ProjectPairsViewState();
 
 window.addEventListener("DOMContentLoaded", async () => {
-    window.electronApi.onShowOpenFilesView(() => showView("open-files"));
-    window.electronApi.onShowProjectPairsView(() => showView("project-pairs"));
-    window.electronApi.onShowWarningsView(() => showView("warnings"));
-    // Open files view
-    document.getElementById("plagiarism-results-file-btn").addEventListener(
-        "click", selectPlagiarismResultsFile);
-    document.getElementById("projects-directory-btn").addEventListener(
-        "click", selectProjectsDirectory);
-    document.getElementById("verdicts-file-btn").addEventListener(
-        "click", selectVerdictsFile);
-    document.getElementById("open-files-btn").addEventListener(
-        "click", openFiles);
-    // Project pairs view
     document.getElementById("prev-match-btn").addEventListener(
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
@@ -148,247 +111,32 @@ window.addEventListener("DOMContentLoaded", async () => {
         "click", markPotentialPlagiarism);
     document.getElementById("plagiarism-btn").addEventListener(
         "click", markPlagiarism);
-
-    await showView("open-files");
 });
 
-// Call this function when switching views (e.g., from project pairs view to
-// warnings view).
-async function showView(view) {
-    const openFilesView = document.getElementById("open-files-view");
-    const projectPairsView = document.getElementById("project-pairs-view");
-    const warningsView = document.getElementById("warnings-view");
-
-    if (view === "open-files") {
-        projectPairsView.className = "hide";
-        warningsView.className = "hide";
-        openFilesView.className = "show";
-        await showOpenFilesView();
-    }
-    else if (view === "project-pairs") {
-        openFilesView.className = "hide";
-        warningsView.className = "hide";
-        projectPairsView.className = "show";
-        await showProjectPairView();
-    }
-    else {
-        openFilesView.className = "hide";
-        projectPairsView.className = "hide";
-        warningsView.className = "show";
-        showWarningsView();
-    }
+function setProjectPairs(directory, projectPairs) {
+    state = new ProjectPairsViewState(directory, projectPairs);
 }
 
-/* OPEN FILES --------------------------------------------------------------- */
-
-async function showOpenFilesView() {
-    const previousPaths = await _readPreviousPaths();
-    if (previousPaths.plagiarismResultsFile) {
-        document.getElementById("plagiarism-results-file-path").innerText =
-            previousPaths.plagiarismResultsFile;
-    }
-    if (previousPaths.projectsDirectory) {
-        document.getElementById("projects-directory-path").innerText =
-            previousPaths.projectsDirectory;
-    }
-    if (previousPaths.verdictsFile) {
-        document.getElementById("verdicts-file-path").innerText =
-            previousPaths.verdictsFile;
-    }
-}
-
-async function openFiles() {
-    const plagiarismResultsFile =
-        document.getElementById("plagiarism-results-file-path").innerText;
-    const projectsDirectory =
-        document.getElementById("projects-directory-path").innerText;
-    const verdictsFile =
-        document.getElementById("verdicts-file-path").innerText;
-
-    let anyFileMissing = false;
-    if (!plagiarismResultsFile) {
-        document.getElementById("plagiarism-results-file-label").classList
-            .add("error-msg");
-        anyFileMissing = true;
-    }
-    else {
-        document.getElementById("plagiarism-results-file-label").classList
-            .remove("error-msg");
-    }
-    if (!projectsDirectory) {
-        document.getElementById("projects-directory-label").classList
-            .add("error-msg");
-        anyFileMissing = true;
-    }
-    else {
-        document.getElementById("projects-directory-label").classList
-            .remove("error-msg");
-    }
-    if (!verdictsFile) {
-        document.getElementById("verdicts-file-label").classList
-            .add("error-msg");
-        anyFileMissing = true;
-    }
-    else {
-        document.getElementById("verdicts-file-label").classList
-            .remove("error-msg");
-    }
-    if (anyFileMissing) {
-        document.getElementById("open-files-error-msg").innerText =
-            "Some files were not selected. All the files are required.";
-        document.getElementById("open-files-error-msg").classList
-            .remove("hide");
-        return;
-    }
-
-    const fileContents = await window.electronApi
-        .readFile("", plagiarismResultsFile);
-    let plagiarismResults;
-    try {
-        plagiarismResults = JSON.parse(fileContents);
-    }
-    catch (e) {
-        document.getElementById("open-files-error-msg").innerText =
-            "Failed to parse the plagiarism results file. Please make sure you "
-            + "selected a file generated by the plagiarism detection tool.";
-        return;
-    }
-    if (!Array.isArray(plagiarismResults.project_pairs)) {
-        document.getElementById("open-files-error-msg").innerText =
-            "This file does not contain a project pair list. Please select a"
-            + " JSON file generated by the plagiarism detection tool.";
-        return;
-    }
-
-    state = new GuiState(
-        plagiarismResultsFile,
-        projectsDirectory,
-        plagiarismResults.project_pairs,
-        plagiarismResults.warnings);
-    await window.electronApi.loadVerdicts(verdictsFile);
-    document.getElementById("document-title").innerText = plagiarismResultsFile;
-    document.getElementById("open-files-error-msg").classList.add("hide");
-    _savePaths(plagiarismResultsFile, projectsDirectory, verdictsFile);
-
-    await showView("project-pairs");
-}
-
-async function selectPlagiarismResultsFile() {
-    const path = await window.electronApi.showOpenDialog({
-        title: "Select the plagiarism results file",
-        filters: [
-            { name: "FUNGUS File", extensions: ["json"] }
-        ],
-        properties: ["openFile"]
-    });
-    if (!path) return;
-
-    document.getElementById("plagiarism-results-file-path").innerText = path;
-}
-
-async function selectProjectsDirectory() {
-    const path = await window.electronApi.showOpenDialog({
-        title: "Select the directory containing the projects being compared",
-        properties: ["openDirectory"]
-    });
-    if (!path) return;
-
-    document.getElementById("projects-directory-path").innerText = path;
-}
-
-async function selectVerdictsFile() {
-    const isNewFile =
-        document.getElementById("is-verdicts-file-new-checkbox").checked;
-
-    let path;
-    if (isNewFile) {
-        path = await window.electronApi.showSaveDialog({
-            title: "Select the file in which to save the match verdicts "
-                + "(accept/reject).",
-            filters: [
-                { name: "Verdicts File", extensions: ["json"] },
-            ]
-        });
-    }
-    else {
-        path = await window.electronApi.showOpenDialog({
-            title: "Select the file in which to save the match verdicts "
-                + "(accept/reject).",
-            filters: [
-                { name: "Verdicts File", extensions: ["json"] },
-            ],
-            properties: ["openFile"]
-        });
-    }
-    if (!path) return;
-
-    document.getElementById("verdicts-file-path").innerText = path;
-}
-
-/**
- * Tries to read the previous file paths that the user opened.
- *
- * @returns {{
- *      plagiarismResultsFile: string | null,
- *      projectsDirectory: string | null,
- *      verdictsFile: string | null
- * }}
- */
-async function _readPreviousPaths() {
-    try {
-        const stringifiedData = await window.electronApi.readUserData(
-            "previous_paths.json");
-        const data = JSON.parse(stringifiedData);
-        return data;
-    }
-    catch (e) {
-        console.log(e);
-        return {
-            plagiarismResultsFile: null,
-            projectsDirectory: null,
-            verdictsFile: null
-        };
-    }
-}
-
-/**
- * Tries to save the file paths that the user just opened.
- *
- * @param {string} plagiarismResultsFile
- * @param {string} projectsDirectory
- * @param {string} verdictsFile
- */
-async function _savePaths(plagiarismResultsFile, projectsDirectory,
-    verdictsFile) {
-
-    try {
-        const data = { plagiarismResultsFile, projectsDirectory, verdictsFile };
-        const stringifiedData = JSON.stringify(data);
-        await window.electronApi.writeUserData(
-            "previous_paths.json", stringifiedData);
-    }
-    catch (e) {
-        console.log(e);
-    }
-}
-
-/* PROJECT PAIRS ------------------------------------------------------------ */
-
-async function showProjectPairView() {
+async function showProjectPairsView() {
+    document.getElementById("project-pairs-view").classList.remove("hide");
     const noResultsElement = document.getElementById("no-results-msg");
     const projectPairsContainer
         = document.getElementById("outer-project-pair-container");
     if (state.projectPairs.length === 0) {
-        projectPairsContainer.className = "hide";
-        noResultsElement.className = "show";
+        projectPairsContainer.classList.add("hide");
+        noResultsElement.classList.remove("hide");
     }
     else {
-        noResultsElement.className = "hide";
-        projectPairsContainer.className = "show";
+        noResultsElement.classList.add("hide");
+        projectPairsContainer.classList.remove("hide");
         state.clampIndices();
         displayProjectPairs(state.projectPairs);
         await selectProjectPair(state.currentProjectPairIndex);
     }
+}
+
+function hideProjectPairsView() {
+    document.getElementById("project-pairs-view").classList.add("hide");
 }
 
 /**
@@ -397,7 +145,7 @@ async function showProjectPairView() {
 function displayProjectPairs(projectPairs) {
     const projectPairsContainer = document.getElementById("project-pair-list");
 
-    removeAllChildren(projectPairsContainer);
+    _removeAllChildren(projectPairsContainer);
 
     for (let i = 0; i < projectPairs.length; i++) {
         const projectPairElement = document.createElement("div");
@@ -416,6 +164,7 @@ function displayProjectPairs(projectPairs) {
         project2NameElement.innerText = projectPairs[i].project2Name;
         projectPairElement.appendChild(project2NameElement);
 
+        // TODO: Instead, show # confirmed and # unsure
         const numMatchesElement = document.createElement("p");
         const numUnconfirmedMatches = projectPairs[i].matches.length;
         const totalNumMatches = projectPairs[i].totalNumMatches;
@@ -529,7 +278,7 @@ async function applyMatchFilters() {
 
     if (!_areSetsIdentical(newVerdictsToShow, state.verdictsToShow)) {
         state.verdictsToShow = newVerdictsToShow;
-        showProjectPairView();
+        showProjectPairsView();
     }
 
     // TODO: Find some way to allow changing filters even when there are no
@@ -553,49 +302,49 @@ function showMatchVerdict() {
         state.currentMatch.location1, state.currentMatch.location2);
     if (verdict === "no-plagiarism") {
         verdictText.innerHTML = "No Plagiarism (&#10008;)";
-        noPlagiarismButton.className = "hide";
-        potentialPlagiarismButton.className = "hide";
-        plagiarismButton.className = "hide";
-        verdictText.className = "show";
+        noPlagiarismButton.classList.add("hide");
+        potentialPlagiarismButton.classList.add("hide");
+        plagiarismButton.classList.add("hide");
+        verdictText.classList.remove("hide");
     }
     else if (verdict === "potential-plagiarism") {
         verdictText.innerHTML = "Potential Plagiarism (?)";
-        noPlagiarismButton.className = "hide";
-        potentialPlagiarismButton.className = "hide";
-        plagiarismButton.className = "hide";
-        verdictText.className = "show";
+        noPlagiarismButton.classList.add("hide");
+        potentialPlagiarismButton.classList.add("hide");
+        plagiarismButton.classList.add("hide");
+        verdictText.classList.remove("hide");
     }
     else if (verdict === "plagiarism") {
         verdictText.innerHTML = "Plagiarism (&#10004;)";
-        noPlagiarismButton.className = "hide";
-        potentialPlagiarismButton.className = "hide";
-        plagiarismButton.className = "hide";
-        verdictText.className = "show";
+        noPlagiarismButton.classList.add("hide");
+        potentialPlagiarismButton.classList.add("hide");
+        plagiarismButton.classList.add("hide");
+        verdictText.classList.remove("hide");
     }
     else {
-        verdictText.className = "hide";
-        noPlagiarismButton.className = "show";
-        potentialPlagiarismButton.className = "show";
-        plagiarismButton.className = "show";
+        verdictText.classList.add("hide");
+        noPlagiarismButton.classList.remove("hide");
+        potentialPlagiarismButton.classList.remove("hide");
+        plagiarismButton.classList.remove("hide");
     }
 }
 
 async function markNoPlagiarism() {
     await window.electronApi.setVerdict(state.currentMatch.location1,
         state.currentMatch.location2, "no-plagiarism");
-    await showProjectPairView();
+    await showProjectPairsView();
 }
 
 async function markPotentialPlagiarism() {
     await window.electronApi.setVerdict(state.currentMatch.location1,
         state.currentMatch.location2, "potential-plagiarism");
-    await showProjectPairView();
+    await showProjectPairsView();
 }
 
 async function markPlagiarism() {
     await window.electronApi.setVerdict(state.currentMatch.location1,
         state.currentMatch.location2, "plagiarism");
-    await showProjectPairView();
+    await showProjectPairsView();
 }
 
 async function _showCodeLocation(pane) {
@@ -654,7 +403,7 @@ async function _loadAndDisplayCode(projectsDirectoryPath, filePath,
     }
 
     const codeBlock = document.getElementById(`project${pane}-code`);
-    removeAllChildren(codeBlock);
+    _removeAllChildren(codeBlock);
     for (const child of highlightedCodeElements) {
         codeBlock.appendChild(child);
     }
@@ -825,62 +574,27 @@ function _scrollToLocation(startByte, endByte, pane) {
     }
 }
 
-/* WARNINGS ----------------------------------------------------------------- */
-
-function showWarningsView() {
-    const noWarningsElement = document.getElementById("no-warnings-msg");
-    const warningsContainer = document.getElementById("warnings-container");
-    if (state.warnings && state.warnings.length > 0) {
-        noWarningsElement.className = "hide";
-        warningsContainer.className = "show";
-        displayWarnings(state.warnings);
-    }
-    else {
-        warningsContainer.className = "hide";
-        noWarningsElement.className = "show";
-    }
-}
-
-function displayWarnings(warnings) {
-    const warningsTableBody = document.getElementById("warnings-tbody");
-
-    const children = Array.from(warningsTableBody.childNodes);
-    for (const child of children) {
-        if (child.id !== "warnings-tbody-header") {
-            warningsTableBody.removeChild(child);
-        }
-    }
-
-    for (const warning of warnings) {
-        const rowElement = document.createElement("tr");
-
-        const typeCell = document.createElement("td");
-        typeCell.innerText = warning.warnType;
-        rowElement.appendChild(typeCell);
-
-        const fileCell = document.createElement("td");
-        fileCell.innerText = warning.file;
-        rowElement.appendChild(fileCell);
-
-        const messageCell = document.createElement("td");
-        messageCell.innerText = warning.message;
-        rowElement.appendChild(messageCell);
-
-        warningsTableBody.appendChild(rowElement);
-    }
-}
-
-/* HELPERS ------------------------------------------------------------------ */
-
 /**
  * Removes all children of the given element.
  *
  * @param {HTMLElement} element
  */
-function removeAllChildren(element) {
+function _removeAllChildren(element) {
     while (element.firstChild) {
         element.removeChild(element.firstChild);
     }
+}
+
+/**
+ * @param {Set<string>} set1
+ * @param {Set<string>} set2
+ */
+function _areSetsIdentical(set1, set2) {
+    if (set1.size !== set2.size) return false;
+    for (const x of set1) {
+        if (!set2.has(x)) return false;
+    }
+    return true;
 }
 
 function _clamp(x, min, max) {
@@ -895,208 +609,11 @@ function _clamp(x, min, max) {
     }
 }
 
-/**
- * @param {Array} projectPairsFromFile
- * @param {string} fileName
- * @returns {{projectPairs: [ProjectPair], warnings: [Warning]}}
- */
-function _convertProjectPairs(projectPairsFromFile, fileName) {
-    const projectPairs = [];
-    let allWarnings = [];
-
-    for (let i = 0; i < projectPairsFromFile.length; i++) {
-        const pp = projectPairsFromFile[i];
-        const badAttributes = [];
-        if (!pp.project1) badAttributes.push("project1");
-        if (!pp.project2) badAttributes.push("project2");
-        if (!Array.isArray(pp.matches)) badAttributes.push("matches");
-        if (badAttributes.length > 0) {
-            allWarnings.push(new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${i}] Missing or invalid attributes: `
-                + `${badAttributes.join(", ")}. That project pair has been `
-                + "discarded."));
-            continue;
-        }
-
-        const { matches, warnings } = _convertMatches(pp.matches, fileName, i);
-        allWarnings = allWarnings.concat(warnings);
-        if (matches.length === 0) {
-            allWarnings.push(new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${i}] No valid matches. That `
-                + "project pair has been discarded."));
-            continue;
-        }
-
-        projectPairs.push(new ProjectPair(
-            pp.project1, pp.project2, matches, matches.length));
-    }
-
-    return {
-        projectPairs: projectPairs,
-        warnings: allWarnings
-    };
-}
-
-/**
- * @param {Array} matchesFromFile
- * @param {string} fileName
- * @param {number} projectPairIndex
- * @returns {{matches: [Match], warnings: [Warning]}}
- */
-function _convertMatches(matchesFromFile, fileName, projectPairIndex) {
-    const matches = [];
-    let allWarnings = [];
-
-    for (let i = 0; i < matchesFromFile.length; i++) {
-        const m = matchesFromFile[i];
-        const badAttributes = [];
-        if (!m.project_1_location) badAttributes.push("project_1_location");
-        if (!m.project_2_location) badAttributes.push("project_2_location");
-        if (badAttributes.length > 0) {
-            allWarnings.push(new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${projectPairIndex}, match at index `
-                + `${i}] Missing or invalid attributes: `
-                + `${badAttributes.join(", ")}. This match has been `
-                + "discarded."));
-            continue;
-        }
-
-        const { location: location1, warnings: warnings1 } = _convertLocation(
-            m.project_1_location, projectPairIndex, i, 1);
-        allWarnings = allWarnings.concat(warnings1);
-        if (!location1) {
-            allWarnings.push(new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${projectPairIndex}, match at index `
-                + `${i}] Failed to convert project 1 location. This match has `
-                + "been discarded."));
-            continue;
-        }
-
-        const { location: location2, warnings: warnings2 } = _convertLocation(
-            m.project_2_location, projectPairIndex, i, 2);
-        allWarnings = allWarnings.concat(warnings2);
-        if (!location2) {
-            allWarnings.push(new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${projectPairIndex}, match at index `
-                + `${i}] Failed to convert project 2 location. This match has `
-                + "been discarded."));
-            continue;
-        }
-
-        matches.push(new Match(location1, location2));
-    }
-
-    return {
-        matches: matches.sort(_compareMatches),
-        warnings: allWarnings
-    };
-}
-
-/**
- * @param {{file: string, span: {start: number, end: number}}} locationFromFile
- * @param {string} fileName
- * @param {number} projectPairIndex
- * @param {number} matchIndex
- * @param {number} projectNumber
- * @returns {{location: CodeLocation, warnings: [Warning]}}
- */
-function _convertLocation(locationFromFile, fileName, projectPairIndex,
-    matchIndex, projectNumber) {
-
-    const badAttributes = [];
-    if (!locationFromFile.file) {
-        badAttributes.push("file");
-    }
-    if (!locationFromFile.span) {
-        badAttributes.push("span");
-    }
-    else {
-        const start = locationFromFile.span.start;
-        const end = locationFromFile.span.end;
-        if (!Number.isFinite(start) || start < 0) {
-            badAttributes.push("span.start");
-        }
-        if (!Number.isFinite(end) || end <= start) {
-            badAttributes.push("span.end");
-        }
-    }
-    if (badAttributes.length > 0) {
-        return {
-            location: null,
-            warnings: [new Warning(
-                "Load JSON",
-                fileName,
-                `[Project pair at index ${projectPairIndex}, match at index`
-                + `${matchIndex}, project ${projectNumber}] Missing or invalid`
-                + `attributes: ${badAttributes.join(", ")}.`)]
-        };
-    }
-    else {
-        return {
-            location: new CodeLocation(
-                locationFromFile.file,
-                locationFromFile.span.start,
-                locationFromFile.span.end),
-            warnings: []
-        };
-    }
-}
-
-/**
- * @param {ProjectPair} projectPair1
- * @param {ProjectPair} projectPair2
- */
-function _compareProjectPairs(projectPair1, projectPair2) {
-    return projectPair2.totalNumMatches - projectPair1.totalNumMatches;
-}
-
-/**
- * @param {Match} match1
- * @param {Match} match2
- */
-function _compareMatches(match1, match2) {
-    return _compareLocations(match1.location1, match2.location1)
-        || _compareLocations(match1.location2, match2.location2);
-}
-
-/**
- * @param {CodeLocation} location1
- * @param {CodeLocation} location2
- */
-function _compareLocations(location1, location2) {
-    return (("" + location1.file).localeCompare(location2.file))
-        || (location1.startByte - location2.startByte)
-        || (location1.endByte - location2.endByte);
-}
-
-/**
- * @param {Warning} warning1
- * @param {Warning} warning2
- */
-function _compareWarnings(warning1, warning2) {
-    return warning1.warnType.localeCompare(warning2.warnType)
-        || warning1.file.localeCompare(warning2.file)
-        || warning1.message.localeCompare(warning2.message);
-}
-
-/**
- * @param {Set<string>} set1
- * @param {Set<string>} set2
- */
-function _areSetsIdentical(set1, set2) {
-    if (set1.size !== set2.size) return false;
-    for (const x of set1) {
-        if (!set2.has(x)) return false;
-    }
-    return true;
-}
+export {
+    ProjectPair,
+    Match,
+    CodeLocation,
+    setProjectPairs,
+    showProjectPairsView,
+    hideProjectPairsView
+};

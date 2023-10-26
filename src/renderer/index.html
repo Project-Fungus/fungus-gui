@@ -6,8 +6,14 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">
     <title id="document-title">FUNGUS</title>
-    <script src="./index.js"></script>
+    <script src="./index.js" type="module"></script>
     <link href="./index.css" rel="stylesheet" />
+    <script src="./warnings-view.js" type="module"></script>
+    <link href="./warnings-view.css" rel="stylesheet" />
+    <script src="./project-pairs-view.js" type="module"></script>
+    <link href="./project-pairs-view.css" rel="stylesheet" />
+    <script src="./open-files-view.js" type="module"></script>
+    <link href="./open-files-view.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -41,7 +47,7 @@
         <!-- PROJECT PAIRS -->
         <div id="project-pairs-view" class="hide">
             <p id="no-results-msg">There are no matches to show.</p>
-            <div id="outer-project-pair-container">
+            <div id="outer-project-pair-container" class="hide">
                 <div id="project-pair-list">
                     <!-- Project pairs go here. For example: -->
                     <!-- <div id="project-pair0" class="project-pair">
@@ -119,7 +125,7 @@ int main() {
         <!-- WARNINGS -->
         <div id="warnings-view" class="hide">
             <p id="no-warnings-msg">There are no warnings to show.</p>
-            <div id="warnings-container">
+            <div id="warnings-container" class="hide">
                 <table id="warnings-table">
                     <tbody id="warnings-tbody">
                         <tr id="warnings-tbody-header">

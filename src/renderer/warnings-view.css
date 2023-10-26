@@ -1,0 +1,33 @@
+/* LAYOUT ------------------------------------------------------------------- */
+
+#warnings-view {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+}
+
+#no-warnings-msg {
+    padding: var(--outer-padding);
+    box-sizing: border-box;
+}
+
+#warnings-container {
+    width: 100%;
+    margin: 0;
+    padding: var(--outer-padding);
+    box-sizing: border-box;
+}
+
+/* OTHER -------------------------------------------------------------------- */
+
+table {
+    width: 100%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+td,
+th {
+    border: 1px solid black;
+}

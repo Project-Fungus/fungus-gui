@@ -44,7 +44,7 @@ function createWindow() {
         show: false
     });
     window.maximize();
-    window.loadFile(path.join(__dirname, "index.html"));
+    window.loadFile(path.join(__dirname, "renderer/index.html"));
     window.show();
 }
 
