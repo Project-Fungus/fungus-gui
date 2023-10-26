@@ -89,11 +89,19 @@ main {
     justify-content: space-between;
 }
 
+#match-selection-header,
 #verdicts-container {
     display: flex;
     flex-direction: row;
     align-items: stretch;
     gap: 5px;
+}
+
+
+#filter-matches-dialog {
+    max-width: 75%;
+    max-height: 75%;
+    box-sizing: border-box;
 }
 
 #project-code-container {
@@ -180,6 +188,10 @@ html {
 
 .project-pair:hover {
     background-color: darkgrey;
+}
+
+#filter-matches-btn-container {
+    margin-top: 2em;
 }
 
 #project1-filename,

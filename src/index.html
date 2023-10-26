@@ -52,10 +52,33 @@
                 </div>
                 <div id="project-pair-container">
                     <div id="match-header">
-                        <div>
-                            <button id="prev-match-btn">&lt;</button>
-                            <span id="match-count">Match 0/0</span>
-                            <button id="next-match-btn">&gt;</button>
+                        <div id="match-selection-header">
+                            <div>
+                                <button id="prev-match-btn">&lt;</button>
+                                <span id="match-count">Match 0/0</span>
+                                <button id="next-match-btn">&gt;</button>
+                            </div>
+                            <button id="filter-matches-open-btn">Filter matches</button>
+                            <dialog id="filter-matches-dialog">
+                                <h2>Filter matches...</h2>
+                                <h3>By verdict:</h3>
+                                <div>
+                                    <input type="checkbox" id="filter-matches-no-verdict-checkbox" />
+                                    <label for="filter-matches-no-verdict-checkbox">No Verdict</label>
+                                    <input type="checkbox" id="filter-matches-no-plagiarism-checkbox" />
+                                    <label for="filter-matches-no-plagiarism-checkbox">No Plagiarism</label>
+                                    <input type="checkbox" id="filter-matches-potential-plagiarism-checkbox" />
+                                    <label for="filter-matches-potential-plagiarism-checkbox">
+                                        Potential Plagiarism
+                                    </label>
+                                    <input type="checkbox" id="filter-matches-plagiarism-checkbox" />
+                                    <label for="filter-matches-plagiarism-checkbox">Plagiarism</label>
+                                </div>
+                                <div id="filter-matches-btn-container">
+                                    <button id="filter-matches-cancel-btn">Cancel</button>
+                                    <button id="filter-matches-apply-btn">Apply</button>
+                                </div>
+                            </dialog>
                         </div>
                         <div id="verdicts-container">
                             <span id="match-verdict"></span>

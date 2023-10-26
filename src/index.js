@@ -1,3 +1,6 @@
+// TODO: Split this mess into multiple files
+// TODO: The example code seems buggy in a few ways (wrong ranges highlighted, first match duplicated)
+
 class ProjectPair {
     /**
      * @param {string} project1Name
@@ -52,20 +55,22 @@ class Warning {
 
 class GuiState {
     constructor(fileName, projectsDirectoryPath, projectPairs, warnings) {
-        this.projectsDirectoryPath = projectsDirectoryPath || "";
-        this.warnings = (warnings || []).map((w) =>
-            new Warning(w.warn_type, w.file, w.message));
-        projectPairs = projectPairs || [];
         const {
             projectPairs: convertedProjectPairs,
             warnings: conversionWarnings
-        } = _convertProjectPairs(projectPairs, fileName);
-        this.projectPairs = convertedProjectPairs;
-        this.warnings = this.warnings.concat(conversionWarnings);
-        this.warnings = this.warnings.sort(_compareWarnings);
+        } = _convertProjectPairs(projectPairs || [], fileName);
 
+        this._allProjectPairs =
+            convertedProjectPairs.sort(_compareProjectPairs);
+        this.warnings = (warnings || [])
+            .map((w) => new Warning(w.warn_type, w.file, w.message))
+            .concat(conversionWarnings)
+            .sort(_compareWarnings);
+        this.projectsDirectoryPath = projectsDirectoryPath || "";
         this.currentProjectPairIndex = 0;
         this.currentMatchIndex = 0;
+
+        this.verdictsToShow = new Set(["no-verdict"]);
     }
 
     /**
@@ -79,6 +84,21 @@ class GuiState {
             0, this.projectPairs.length - 1);
         this.currentMatchIndex = _clamp(this.currentMatchIndex,
             0, this.currentProjectPair.matches.length - 1);
+    }
+
+    get projectPairs() {
+        return this._allProjectPairs
+            .map((pp) =>
+                new ProjectPair(
+                    pp.project1Name,
+                    pp.project2Name,
+                    pp.matches.filter((m) => this.verdictsToShow.has(
+                        window.electronApi
+                            .getVerdict(m.location1, m.location2))),
+                    pp.totalNumMatches
+                )
+            )
+            .filter((pp) => pp && pp.matches && pp.matches.length > 0);
     }
 
     /**
@@ -116,6 +136,12 @@ window.addEventListener("DOMContentLoaded", async () => {
         "click", selectPreviousMatch);
     document.getElementById("next-match-btn").addEventListener(
         "click", selectNextMatch);
+    document.getElementById("filter-matches-open-btn").addEventListener(
+        "click", openMatchFiltersDialog);
+    document.getElementById("filter-matches-apply-btn").addEventListener(
+        "click", applyMatchFilters);
+    document.getElementById("filter-matches-cancel-btn").addEventListener(
+        "click", cancelMatchFilters);
     document.getElementById("no-plagiarism-btn").addEventListener(
         "click", markNoPlagiarism);
     document.getElementById("potential-plagiarism-btn").addEventListener(
@@ -349,8 +375,6 @@ async function _savePaths(plagiarismResultsFile, projectsDirectory,
 /* PROJECT PAIRS ------------------------------------------------------------ */
 
 async function showProjectPairView() {
-    state.projectPairs = _filterProjectPairsByVerdict(state.projectPairs);
-
     const noResultsElement = document.getElementById("no-results-msg");
     const projectPairsContainer
         = document.getElementById("outer-project-pair-container");
@@ -468,6 +492,56 @@ async function selectNextMatch() {
     await selectMatch(state.currentMatchIndex + 1);
 }
 
+async function openMatchFiltersDialog() {
+    // Show the user their current filters
+    document.getElementById("filter-matches-no-verdict-checkbox").checked =
+        state.verdictsToShow.has("no-verdict");
+    document.getElementById("filter-matches-no-plagiarism-checkbox").checked =
+        state.verdictsToShow.has("no-plagiarism");
+    document.getElementById("filter-matches-potential-plagiarism-checkbox")
+        .checked = state.verdictsToShow.has("no-plagiarism");
+    document.getElementById("filter-matches-plagiarism-checkbox").checked =
+        state.verdictsToShow.has("plagiarism");
+
+    document.getElementById("filter-matches-dialog").showModal();
+}
+
+async function applyMatchFilters() {
+    const newVerdictsToShow = new Set();
+    if (document.getElementById("filter-matches-no-verdict-checkbox").checked) {
+        newVerdictsToShow.add("no-verdict");
+    }
+    if (document
+        .getElementById("filter-matches-no-plagiarism-checkbox")
+        .checked
+    ) {
+        newVerdictsToShow.add("no-plagiarism");
+    }
+    if (document
+        .getElementById("filter-matches-potential-plagiarism-checkbox")
+        .checked
+    ) {
+        newVerdictsToShow.add("potential-plagiarism");
+    }
+    if (document.getElementById("filter-matches-plagiarism-checkbox").checked) {
+        newVerdictsToShow.add("plagiarism");
+    }
+
+    if (!_areSetsIdentical(newVerdictsToShow, state.verdictsToShow)) {
+        state.verdictsToShow = newVerdictsToShow;
+        showProjectPairView();
+    }
+
+    // TODO: Find some way to allow changing filters even when there are no
+    //       matches
+    document.getElementById("filter-matches-dialog").close();
+}
+
+async function cancelMatchFilters() {
+    document.getElementById("filter-matches-dialog").close();
+}
+
+// TODO: Update this to let the user change their mind
 function showMatchVerdict() {
     const noPlagiarismButton = document.getElementById("no-plagiarism-btn");
     const potentialPlagiarismButton
@@ -751,34 +825,6 @@ function _scrollToLocation(startByte, endByte, pane) {
     }
 }
 
-/**
- * Removes matches that have already been evaluated by the user and accepted or
- * rejected.
- *
- * @param {[ProjectPair]} projectPairs
- * @returns {[ProjectPair]}
- */
-function _filterProjectPairsByVerdict(projectPairs) {
-    return projectPairs
-        .map((pp) => {
-            return new ProjectPair(
-                pp.project1Name,
-                pp.project2Name,
-                _filterMatchesByVerdict(pp.matches),
-                pp.totalNumMatches
-            );
-        })
-        .filter((pp) => pp && pp.matches && pp.matches.length > 0);
-}
-
-function _filterMatchesByVerdict(matches) {
-    // TODO: Let the user change this
-    const verdictsToShow = new Set(["no-verdict"]);
-    return matches.filter((m) =>
-        verdictsToShow.has(
-            window.electronApi.getVerdict(m.location1, m.location2)));
-}
-
 /* WARNINGS ----------------------------------------------------------------- */
 
 function showWarningsView() {
@@ -890,7 +936,7 @@ function _convertProjectPairs(projectPairsFromFile, fileName) {
     }
 
     return {
-        projectPairs: projectPairs.sort(_compareProjectPairs),
+        projectPairs: projectPairs,
         warnings: allWarnings
     };
 }
@@ -1041,4 +1087,16 @@ function _compareWarnings(warning1, warning2) {
     return warning1.warnType.localeCompare(warning2.warnType)
         || warning1.file.localeCompare(warning2.file)
         || warning1.message.localeCompare(warning2.message);
+}
+
+/**
+ * @param {Set<string>} set1
+ * @param {Set<string>} set2
+ */
+function _areSetsIdentical(set1, set2) {
+    if (set1.size !== set2.size) return false;
+    for (const x of set1) {
+        if (!set2.has(x)) return false;
+    }
+    return true;
 }
