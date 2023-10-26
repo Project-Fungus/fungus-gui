@@ -1,6 +1,3 @@
-// TODO: The example code seems buggy in a few ways (wrong ranges highlighted,
-//       first match duplicated)
-
 import { showWarningsView, hideWarningsView } from "./warnings-view.js";
 import {
     showProjectPairsView,
