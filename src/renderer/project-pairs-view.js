@@ -4,12 +4,14 @@ class ProjectPair {
      * @param {string} project2Name
      * @param {[Match]} matches
      * @param {number} totalNumMatches
+     * @param {string} key
      */
-    constructor(project1Name, project2Name, matches, totalNumMatches) {
+    constructor(project1Name, project2Name, matches, totalNumMatches, key) {
         this.project1Name = project1Name;
         this.project2Name = project2Name;
         this.matches = matches;
         this.totalNumMatches = totalNumMatches;
+        this.key = key || crypto.randomUUID();
     }
 }
 
@@ -39,7 +41,8 @@ class CodeLocation {
 
 class ProjectPairsViewState {
     constructor(projectsDirectoryPath, projectPairs) {
-        this._allProjectPairs = projectPairs;
+        projectPairs = projectPairs || [];
+        this._projectPairByKey = new Map(projectPairs.map((p) => [p.key, p]));
         this.projectsDirectoryPath = projectsDirectoryPath || "";
 
         this.currentProjectPairIndex = 0;
@@ -60,10 +63,39 @@ class ProjectPairsViewState {
             0, this.currentProjectPair.matches.length - 1);
     }
 
-    get projectPairs() {
-        if (!this._allProjectPairs) return [];
+    /**
+     * @param {ProjectPair} projectPair
+     * @returns {{
+     *      numPlagiarism: number,
+     *      numPotentialPlagiarism: number,
+     *      numNoVerdict: number
+     * }}
+     */
+    countVerdicts(key) {
+        const projectPair = this._projectPairByKey.get(key);
+        if (!projectPair) {
+            return {
+                numPlagiarism: 0,
+                numPotentialPlagiarism: 0,
+                numNoVerdict: 0
+            };
+        }
+        let numPlagiarism = 0;
+        let numPotentialPlagiarism = 0;
+        let numNoVerdict = 0;
+        for (const m of projectPair.matches) {
+            const verdict = window.electronApi.getVerdict(m.location1, m.location2);
+            if (verdict === "plagiarism") numPlagiarism++;
+            else if (verdict === "potential-plagiarism") numPotentialPlagiarism++;
+            else if (verdict === "no-verdict") numNoVerdict += 1;
+        }
+        return { numPlagiarism, numPotentialPlagiarism, numNoVerdict };
+    }
 
-        return this._allProjectPairs
+    get projectPairs() {
+        if (!this._projectPairByKey) return [];
+
+        return Array.from(this._projectPairByKey.values())
             .map((pp) =>
                 new ProjectPair(
                     pp.project1Name,
@@ -71,7 +103,8 @@ class ProjectPairsViewState {
                     pp.matches.filter((m) => this.verdictsToShow.has(
                         window.electronApi
                             .getVerdict(m.location1, m.location2))),
-                    pp.totalNumMatches
+                    pp.totalNumMatches,
+                    pp.key,
                 )
             )
             .filter((pp) => pp && pp.matches && pp.matches.length > 0);
@@ -148,6 +181,8 @@ function displayProjectPairs(projectPairs) {
     _removeAllChildren(projectPairsContainer);
 
     for (let i = 0; i < projectPairs.length; i++) {
+        const projectPair = projectPairs[i];
+
         const projectPairElement = document.createElement("div");
         projectPairElement.className = "project-pair";
         projectPairElement.id = `project-pair${i}`;
@@ -157,20 +192,23 @@ function displayProjectPairs(projectPairs) {
         );
 
         const project1NameElement = document.createElement("p");
-        project1NameElement.innerText = projectPairs[i].project1Name;
+        project1NameElement.innerText = projectPair.project1Name;
         projectPairElement.appendChild(project1NameElement);
 
         const project2NameElement = document.createElement("p");
-        project2NameElement.innerText = projectPairs[i].project2Name;
+        project2NameElement.innerText = projectPair.project2Name;
         projectPairElement.appendChild(project2NameElement);
 
-        // TODO: Instead, show # confirmed and # unsure
         const numMatchesElement = document.createElement("p");
-        const numUnconfirmedMatches = projectPairs[i].matches.length;
-        const totalNumMatches = projectPairs[i].totalNumMatches;
-        numMatchesElement.innerText =
-            `Matches: ${numUnconfirmedMatches}/${totalNumMatches} unconfirmed`;
+        const { numPlagiarism, numPotentialPlagiarism, numNoVerdict } =
+            state.countVerdicts(projectPair.key);
+        numMatchesElement.innerHTML =
+            `<i>Matches:</i> ${numPlagiarism} (&#10004;) `
+            + `| ${numPotentialPlagiarism} (<b><i>?</i></b>) `
+            + `| ${numNoVerdict} (<b><i>-</i></b>)`;
         projectPairElement.appendChild(numMatchesElement);
+
+        // TODO: Add tooltip to explain numbers?
 
         projectPairsContainer.appendChild(projectPairElement);
     }
