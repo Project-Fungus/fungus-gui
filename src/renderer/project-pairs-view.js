@@ -105,9 +105,7 @@ class ProjectPairsViewState {
                             .getVerdict(m.location1, m.location2))),
                     pp.totalNumMatches,
                     pp.key,
-                )
-            )
-            .filter((pp) => pp && pp.matches && pp.matches.length > 0);
+                ));
     }
 
     /**
@@ -152,19 +150,13 @@ function setProjectPairs(directory, projectPairs) {
 
 async function showProjectPairsView() {
     document.getElementById("project-pairs-view").classList.remove("hide");
-    const noResultsElement = document.getElementById("no-results-msg");
-    const projectPairsContainer
-        = document.getElementById("outer-project-pair-container");
-    if (state.projectPairs.length === 0) {
-        projectPairsContainer.classList.add("hide");
-        noResultsElement.classList.remove("hide");
+    state.clampIndices();
+    displayProjectPairs(state.projectPairs);
+    if (state.projectPairs && state.projectPairs.length > 0) {
+        await selectProjectPair(state.currentProjectPairIndex);
     }
     else {
-        noResultsElement.classList.add("hide");
-        projectPairsContainer.classList.remove("hide");
-        state.clampIndices();
-        displayProjectPairs(state.projectPairs);
-        await selectProjectPair(state.currentProjectPairIndex);
+        displayNoMatches();
     }
 }
 
@@ -179,6 +171,14 @@ function displayProjectPairs(projectPairs) {
     const projectPairsContainer = document.getElementById("project-pair-list");
 
     _removeAllChildren(projectPairsContainer);
+
+    if (!projectPairs || projectPairs.length <= 0) {
+        const noProjectPairsMsg = document.createElement("p");
+        noProjectPairsMsg.id = "no-project-pairs-msg";
+        noProjectPairsMsg.innerText = "No project pairs to show.";
+        projectPairsContainer.appendChild(noProjectPairsMsg);
+        return;
+    }
 
     for (let i = 0; i < projectPairs.length; i++) {
         const projectPair = projectPairs[i];
@@ -222,6 +222,7 @@ function displayProjectPairs(projectPairs) {
  */
 async function selectProjectPair(idx) {
     if (idx < 0 || idx >= state.projectPairs.length) {
+        displayNoMatches();
         return;
     }
     const previousProjectPairIndex = state.currentProjectPairIndex;
@@ -236,7 +237,10 @@ async function selectProjectPair(idx) {
     }
     element.classList.add("current-project-pair");
 
-    if (state.currentProjectPairIndex == previousProjectPairIndex) {
+    if (state.currentProjectPair.matches.length === 0) {
+        displayNoMatches();
+    }
+    if (state.currentProjectPairIndex === previousProjectPairIndex) {
         await selectMatch(state.currentMatchIndex);
     }
     else {
@@ -259,24 +263,37 @@ async function selectMatch(matchIndex) {
         matchIndex >= 0
         && matchIndex < state.currentProjectPair.matches.length;
     if (!isValidIndex) {
+        displayNoMatches();
         return;
     }
+
     state.currentMatchIndex = matchIndex;
 
     const totalNumMatches = state.currentProjectPair.matches.length;
     document.getElementById("match-count").innerText =
         `Match ${matchIndex + 1}/${totalNumMatches}`;
 
+    document.getElementById("project-code-container").classList.remove("hide");
     await Promise.all([_showCodeLocation(1), _showCodeLocation(2)]);
     showMatchVerdict();
 }
 
 async function selectPreviousMatch() {
-    await selectMatch(state.currentMatchIndex - 1);
+    if (state.currentMatchIndex - 1 >= 0) {
+        await selectMatch(state.currentMatchIndex - 1);
+    }
 }
 
 async function selectNextMatch() {
-    await selectMatch(state.currentMatchIndex + 1);
+    if (state.currentMatchIndex + 1 < state.currentProjectPair.matches.length) {
+        await selectMatch(state.currentMatchIndex + 1);
+    }
+}
+
+function displayNoMatches() {
+    document.getElementById("match-count").innerText = "Match 0/0";
+    showMatchVerdict(true);
+    document.getElementById("project-code-container").classList.add("hide");
 }
 
 async function openMatchFiltersDialog() {
@@ -286,7 +303,7 @@ async function openMatchFiltersDialog() {
     document.getElementById("filter-matches-no-plagiarism-checkbox").checked =
         state.verdictsToShow.has("no-plagiarism");
     document.getElementById("filter-matches-potential-plagiarism-checkbox")
-        .checked = state.verdictsToShow.has("no-plagiarism");
+        .checked = state.verdictsToShow.has("potential-plagiarism");
     document.getElementById("filter-matches-plagiarism-checkbox").checked =
         state.verdictsToShow.has("plagiarism");
 
@@ -319,8 +336,6 @@ async function applyMatchFilters() {
         showProjectPairsView();
     }
 
-    // TODO: Find some way to allow changing filters even when there are no
-    //       matches
     document.getElementById("filter-matches-dialog").close();
 }
 
@@ -328,12 +343,24 @@ async function cancelMatchFilters() {
     document.getElementById("filter-matches-dialog").close();
 }
 
-function showMatchVerdict() {
+function showMatchVerdict(hideAll = false) {
+    const verdictText = document.getElementById("match-verdict");
     const noPlagiarismButton = document.getElementById("no-plagiarism-btn");
     const potentialPlagiarismButton
         = document.getElementById("potential-plagiarism-btn");
     const plagiarismButton = document.getElementById("plagiarism-btn");
-    const verdictText = document.getElementById("match-verdict");
+
+    if (hideAll) {
+        verdictText.classList.add("hide");
+        noPlagiarismButton.classList.add("hide");
+        potentialPlagiarismButton.classList.add("hide");
+        plagiarismButton.classList.add("hide");
+        return;
+    }
+    verdictText.classList.remove("hide");
+    noPlagiarismButton.classList.remove("hide");
+    potentialPlagiarismButton.classList.remove("hide");
+    plagiarismButton.classList.remove("hide");
 
     const verdict = window.electronApi.getVerdict(
         state.currentMatch.location1, state.currentMatch.location2);
@@ -386,7 +413,7 @@ function _setVerdictButtonEmphasis(button, emphasized) {
         button.classList.add("emphasized");
     }
     else {
-        button.classList.remove("emphasized")
+        button.classList.remove("emphasized");
     }
 
     if (emphasized === false) {

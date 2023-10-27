@@ -1,18 +1,6 @@
 /* LAYOUT ------------------------------------------------------------------- */
 
 #project-pairs-view {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-#no-results-msg {
-    padding: var(--outer-padding);
-    box-sizing: border-box;
-}
-
-#outer-project-pair-container {
     flex-grow: 1;
     min-height: 0;
     width: 100%;
@@ -29,6 +17,11 @@
     width: 20vw;
     overflow: auto scroll;
     resize: horizontal;
+}
+
+#no-project-pairs-msg {
+    padding: var(--outer-padding);
+    box-sizing: border-box;
 }
 
 #project-pair-container {
