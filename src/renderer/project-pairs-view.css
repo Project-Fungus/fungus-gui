@@ -108,6 +108,11 @@
     background-color: darkgrey;
 }
 
+.tooltip-container {
+    width: fit-content;
+    border-bottom: 1px dotted black;
+}
+
 #filter-matches-btn-container {
     margin-top: 2em;
 }

@@ -203,12 +203,21 @@ function displayProjectPairs(projectPairs) {
         const { numPlagiarism, numPotentialPlagiarism, numNoVerdict } =
             state.countVerdicts(projectPair.key);
         numMatchesElement.innerHTML =
-            `<i>Matches:</i> ${numPlagiarism} (&#10004;) `
-            + `| ${numPotentialPlagiarism} (<b><i>?</i></b>) `
-            + `| ${numNoVerdict} (<b><i>-</i></b>)`;
+            `${numPlagiarism} (&#10004;) `
+            + `${numPotentialPlagiarism} (<b><i>?</i></b>) `
+            + `${numNoVerdict} (<b><i>-</i></b>)`;
+        const numPlagiarismMatches = `${numPlagiarism} match`
+            + (numPlagiarism === 1 ? "" : "es");
+        const numPotentialPlagiarismMatches = `${numPotentialPlagiarism} match`
+            + (numPotentialPlagiarism === 1 ? "" : "es");
+        const numNoVerdictMatches = `${numNoVerdict} match`
+            + (numNoVerdict === 1 ? "" : "es");
+        numMatchesElement.title
+            = `${numPlagiarismMatches} confirmed as plagiarism`
+            + `\n${numPotentialPlagiarismMatches} potentially plagiarism`
+            + `\n${numNoVerdictMatches} not evaluated`;
+        numMatchesElement.className = "tooltip-container";
         projectPairElement.appendChild(numMatchesElement);
-
-        // TODO: Add tooltip to explain numbers?
 
         projectPairsContainer.appendChild(projectPairElement);
     }
