@@ -106,8 +106,6 @@ async function openFiles() {
     const { projectPairs: convertedProjectPairs, warnings: conversionWarnings }
         = _convertProjectPairs(
             plagiarismResults.project_pairs || [], plagiarismResultsFile);
-    // TODO: Also make sure all matches from the verdicts file are included,
-    // even if they are not in the plagiarism results file now
     setProjectPairs(projectsDirectory, convertedProjectPairs);
     setWarnings((plagiarismResults.warnings || [])
         .map((w) => new Warning(w.warn_type, w.file, w.message))
