@@ -6,8 +6,14 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self';">
     <title id="document-title">FUNGUS</title>
-    <script src="./index.js"></script>
+    <script src="./index.js" type="module"></script>
     <link href="./index.css" rel="stylesheet" />
+    <script src="./warnings-view.js" type="module"></script>
+    <link href="./warnings-view.css" rel="stylesheet" />
+    <script src="./project-pairs-view.js" type="module"></script>
+    <link href="./project-pairs-view.css" rel="stylesheet" />
+    <script src="./open-files-view.js" type="module"></script>
+    <link href="./open-files-view.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -40,34 +46,55 @@
         </div>
         <!-- PROJECT PAIRS -->
         <div id="project-pairs-view" class="hide">
-            <p id="no-results-msg">There are no matches to show.</p>
-            <div id="outer-project-pair-container">
-                <div id="project-pair-list">
-                    <!-- Project pairs go here. For example: -->
-                    <!-- <div id="project-pair0" class="project-pair">
+            <div id="project-pair-list">
+                <!-- Project pairs go here. For example: -->
+                <!-- <div id="project-pair0" class="project-pair">
                         <p>Example project 1</p>
                         <p>Example project 2</p>
                         <p>1 match</p>
                     </div> -->
-                </div>
-                <div id="project-pair-container">
-                    <div id="match-header">
+            </div>
+            <div id="project-pair-container">
+                <div id="match-header">
+                    <div id="match-selection-header">
                         <div>
                             <button id="prev-match-btn">&lt;</button>
                             <span id="match-count">Match 0/0</span>
                             <button id="next-match-btn">&gt;</button>
                         </div>
-                        <div>
-                            <span id="match-verdict"></span>
-                            <button id="no-match-btn">No Match &#10008;</button>
-                            <button id="match-without-plagiarism-btn">Match Without Plagiarism &#10008;</button>
-                            <button id="plagiarism-btn">Plagiarism &#10004;</button>
-                        </div>
+                        <button id="filter-matches-open-btn">Filter matches</button>
+                        <dialog id="filter-matches-dialog">
+                            <h2>Filter matches...</h2>
+                            <h3>By verdict:</h3>
+                            <div>
+                                <input type="checkbox" id="filter-matches-no-verdict-checkbox" />
+                                <label for="filter-matches-no-verdict-checkbox">No Verdict</label>
+                                <input type="checkbox" id="filter-matches-no-plagiarism-checkbox" />
+                                <label for="filter-matches-no-plagiarism-checkbox">No Plagiarism</label>
+                                <input type="checkbox" id="filter-matches-potential-plagiarism-checkbox" />
+                                <label for="filter-matches-potential-plagiarism-checkbox">
+                                    Potential Plagiarism
+                                </label>
+                                <input type="checkbox" id="filter-matches-plagiarism-checkbox" />
+                                <label for="filter-matches-plagiarism-checkbox">Plagiarism</label>
+                            </div>
+                            <div id="filter-matches-btn-container">
+                                <button id="filter-matches-cancel-btn">Cancel</button>
+                                <button id="filter-matches-apply-btn">Apply</button>
+                            </div>
+                        </dialog>
                     </div>
-                    <div id="project-code-container">
-                        <div id="project1-container">
-                            <span id="project1-filename"></span>
-                            <pre id="project1-code">
+                    <div id="verdicts-container">
+                        <span id="match-verdict"></span>
+                        <button id="no-plagiarism-btn">No Plagiarism (&#10008;)</button>
+                        <button id="potential-plagiarism-btn">Potential Plagiarism (<b><i>?</i></b>)</button>
+                        <button id="plagiarism-btn">Plagiarism (&#10004;)</button>
+                    </div>
+                </div>
+                <div id="project-code-container">
+                    <div id="project1-container">
+                        <span id="project1-filename"></span>
+                        <pre id="project1-code">
                                 <!-- Project 1 code goes here. For example: -->
                                 <!-- #include &lt;stdio.h&gt;
 
@@ -76,10 +103,10 @@ int main() {
     <span class="unselected-highlighted">return 0</span>;
 } -->
                             </pre>
-                        </div>
-                        <div id="project2-container">
-                            <span id="project2-filename"></span>
-                            <pre id="project2-code">
+                    </div>
+                    <div id="project2-container">
+                        <span id="project2-filename"></span>
+                        <pre id="project2-code">
                                 <!-- Project 1 code goes here. For example: -->
                                 <!-- #include &lt;stdio.h&gt;
 
@@ -88,7 +115,6 @@ int main() {
     <span class="unselected-highlighted">return 0</span>;
 } -->
                             </pre>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -96,7 +122,7 @@ int main() {
         <!-- WARNINGS -->
         <div id="warnings-view" class="hide">
             <p id="no-warnings-msg">There are no warnings to show.</p>
-            <div id="warnings-container">
+            <div id="warnings-container" class="hide">
                 <table id="warnings-table">
                     <tbody id="warnings-tbody">
                         <tr id="warnings-tbody-header">

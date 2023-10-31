@@ -1,129 +1,121 @@
 const { VerdictSet } = require("./verdict.js");
 
-test("Symmetry: no match", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "file1.s", startByte: 0, endByte: 100 };
-    const location2 = { file: "file2.s", startByte: 100, endByte: 200 };
+describe("VerdictSet", () => {
+    it("returns appropriate value for unknown location", () => {
+        const vs = new VerdictSet();
+        const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
+        const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
+        const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
 
-    vs.markNoMatch(location1, location2);
+        vs.setVerdict(location1, location2, "plagiarism");
 
-    expect(vs.getVerdict(location1, location2)).toStrictEqual("no-match");
-    expect(vs.getVerdict(location2, location1)).toStrictEqual("no-match");
-});
+        expect(vs.getVerdict(location1, location3)).toStrictEqual("no-verdict");
+    });
 
-test("Symmetry: match without plagiarism", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "myfile.s", startByte: 123, endByte: 456 };
-    const location2 = { file: "theirfile.s", startByte: 789, endByte: 1012 };
+    it.each([
+        "no-plagiarism", "potential-plagiarism", "plagiarism"
+    ])("respects symmetry for verdict '%s'", (verdict) => {
+        const vs = new VerdictSet();
+        const location1 = { file: "file1.s", startByte: 0, endByte: 100 };
+        const location2 = { file: "file2.s", startByte: 100, endByte: 200 };
 
-    vs.markMatchWithoutPlagiarism(location1, location2);
+        vs.setVerdict(location1, location2, verdict);
 
-    const expectedVerdict = "match-without-plagiarism";
-    expect(vs.getVerdict(location1, location2)).toStrictEqual(expectedVerdict);
-    expect(vs.getVerdict(location2, location1)).toStrictEqual(expectedVerdict);
-});
+        expect(vs.getVerdict(location1, location2)).toStrictEqual(verdict);
+    });
 
-test("Symmetry: plagiarism", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "myfile.s", startByte: 111, endByte: 222 };
-    const location2 = { file: "theirfile.s", startByte: 333, endByte: 444 };
+    it.each([
+        null, undefined, "", "my-silly-verdict", "no-verdict"
+    ])("rejects invalid verdicts", (verdict) => {
+        const vs = new VerdictSet();
+        const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
+        const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
 
-    vs.markPlagiarism(location1, location2);
+        expect(() => vs.setVerdict(location1, location2, verdict))
+            .toThrow(`Invalid verdict '${verdict}'.`);
+    });
 
-    expect(vs.getVerdict(location1, location2)).toStrictEqual("plagiarism");
-    expect(vs.getVerdict(location2, location1)).toStrictEqual("plagiarism");
-});
+    it.each([
+        null,
+        undefined,
+        Object.create(null),
+        { file: "a.s", startByte: 100 },
+        { file: "a.s", startByte: 100, endByte: null },
+        { file: "a.s", startByte: 100, endByte: 0 },
+        { file: "a.s", startByte: 100, endByte: -1 },
+        { file: "a.s", startByte: 100, endByte: [1, 2] },
+        { file: "b.s", endByte: 200 },
+        { file: "b.s", startByte: null, endByte: 200 },
+        { file: "b.s", startByte: -1, endByte: 200 },
+        { file: "b.s", startByte: [1, 2], endByte: 200 },
+        { startByte: 100, endByte: 200 },
+        { file: null, startByte: 100, endByte: 200 },
+        { file: "", startByte: 100, endByte: 200 },
+        { file: ["hello", "bye"], startByte: 100, endByte: 200 },
+    ])("rejects invalid location %p", (invalidLocation) => {
+        const vs = new VerdictSet();
+        const validLocation = { file: "a", startByte: 0, endByte: 1 };
 
-test("Verdict for unknown location", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "file1.s", startByte: 0, endByte: 42 };
-    const location2 = { file: "file2.s", startByte: 0, endByte: 42 };
-    const location3 = { file: "file3.s", startByte: 0, endByte: 42 };
+        const verdict = "potential-plagiarism";
+        expect(() => vs.setVerdict(validLocation, invalidLocation, verdict))
+            .toThrow(`Invalid location ${JSON.stringify(invalidLocation)}.`);
+        expect(() => vs.setVerdict(invalidLocation, validLocation, verdict))
+            .toThrow(`Invalid location ${JSON.stringify(invalidLocation)}.`);
+    });
 
-    vs.markPlagiarism(location1, location2);
+    it.each([
+        ["no-plagiarism", "no-plagiarism", true],
+        ["no-plagiarism", "no-plagiarism", false],
+        ["no-plagiarism", "potential-plagiarism", true],
+        ["no-plagiarism", "potential-plagiarism", false],
+        ["no-plagiarism", "plagiarism", true],
+        ["no-plagiarism", "plagiarism", false],
+        ["potential-plagiarism", "no-plagiarism", true],
+        ["potential-plagiarism", "no-plagiarism", false],
+        ["potential-plagiarism", "potential-plagiarism", true],
+        ["potential-plagiarism", "potential-plagiarism", false],
+        ["potential-plagiarism", "plagiarism", true],
+        ["potential-plagiarism", "plagiarism", false],
+        ["plagiarism", "no-plagiarism", true],
+        ["plagiarism", "no-plagiarism", false],
+        ["plagiarism", "potential-plagiarism", true],
+        ["plagiarism", "potential-plagiarism", false],
+        ["plagiarism", "plagiarism", true],
+        ["plagiarism", "plagiarism", false],
+    ])("allows changing verdict from '%s' to '%s' (same location order: %s)",
+        (verdict1, verdict2, sameOrder) => {
+            const vs = new VerdictSet();
+            const location1 = { file: "a.s", startByte: 500, endByte: 573 };
+            const location2 = { file: "b.s", startByte: 943, endByte: 1024 };
+            vs.setVerdict(location1, location2, verdict1);
 
-    expect(vs.getVerdict(location1, location3)).toStrictEqual("unknown");
-});
+            if (sameOrder) vs.setVerdict(location1, location2, verdict2);
+            else vs.setVerdict(location2, location1, verdict2);
 
-test("Contradictory verdicts: no match", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
-    const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
+            expect(vs.getVerdict(location1, location2)).toStrictEqual(verdict2);
+            expect(vs.getVerdict(location2, location1)).toStrictEqual(verdict2);
+        });
 
-    vs.markNoMatch(location1, location2);
+    it("can serialize and then deserialize", () => {
+        const vs = new VerdictSet();
+        const location1 = { file: "s1.s", startByte: 500, endByte: 573 };
+        const location2 = { file: "s2.s", startByte: 943, endByte: 1024 };
+        const location3 = { file: "s3.s", startByte: 1000, endByte: 1100 };
+        const location4 = { file: "s4.s", startByte: 2000, endByte: 2500 };
 
-    expect(() => vs.markMatchWithoutPlagiarism(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markMatchWithoutPlagiarism(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markPlagiarism(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markPlagiarism(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    // No exception for the same verdict
-    vs.markNoMatch(location1, location2);
-    vs.markNoMatch(location2, location1);
-});
+        vs.setVerdict(location1, location2, "no-plagiarism");
+        vs.setVerdict(location2, location3, "potential-plagiarism");
+        vs.setVerdict(location3, location4, "plagiarism");
 
-test("Contradictory verdicts: match without plagiarism", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
-    const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
+        const serialized = vs.serialize();
+        const deserialized = VerdictSet.deserialize(serialized);
+        expect(deserialized).toStrictEqual(vs);
+    });
 
-    vs.markMatchWithoutPlagiarism(location1, location2);
-
-    expect(() => vs.markNoMatch(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markNoMatch(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markPlagiarism(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markPlagiarism(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    // No exception for the same verdict
-    vs.markMatchWithoutPlagiarism(location1, location2);
-    vs.markMatchWithoutPlagiarism(location2, location1);
-});
-
-test("Contradictory verdicts: plagiarism", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
-    const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
-
-    vs.markPlagiarism(location1, location2);
-
-    expect(() => vs.markNoMatch(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markNoMatch(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markMatchWithoutPlagiarism(location1, location2))
-        .toThrow("Contradictory verdicts.");
-    expect(() => vs.markMatchWithoutPlagiarism(location2, location1))
-        .toThrow("Contradictory verdicts.");
-    // No exception for the same verdict
-    vs.markPlagiarism(location1, location2);
-    vs.markPlagiarism(location2, location1);
-});
-
-test("Serialize and then deserialize", () => {
-    const vs = new VerdictSet();
-    const location1 = { file: "student1.s", startByte: 500, endByte: 573 };
-    const location2 = { file: "student2.s", startByte: 943, endByte: 1024 };
-    const location3 = { file: "student3.s", startByte: 1000, endByte: 1100 };
-    const location4 = { file: "student4.s", startByte: 2000, endByte: 2500 };
-
-    vs.markPlagiarism(location1, location2);
-    vs.markPlagiarism(location2, location3);
-    vs.markNoMatch(location3, location4);
-
-    const serialized = vs.serialize();
-    const deserialized = VerdictSet.deserialize(serialized);
-    expect(deserialized).toStrictEqual(vs);
-});
-
-test("Deserialize empty", () => {
-    const empty = new VerdictSet();
-    expect(VerdictSet.deserialize()).toStrictEqual(empty);
-    expect(VerdictSet.deserialize(null)).toStrictEqual(empty);
-    expect(VerdictSet.deserialize("")).toStrictEqual(empty);
+    it("can deserialize an empty file", () => {
+        const empty = new VerdictSet();
+        expect(VerdictSet.deserialize()).toStrictEqual(empty);
+        expect(VerdictSet.deserialize(null)).toStrictEqual(empty);
+        expect(VerdictSet.deserialize("")).toStrictEqual(empty);
+    });
 });
