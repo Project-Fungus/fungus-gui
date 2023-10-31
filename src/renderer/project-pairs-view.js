@@ -84,10 +84,10 @@ class ProjectPairsViewState {
         let numPotentialPlagiarism = 0;
         let numNoVerdict = 0;
         for (const m of projectPair.matches) {
-            const verdict = window.electronApi.getVerdict(m.location1, m.location2);
-            if (verdict === "plagiarism") numPlagiarism++;
-            else if (verdict === "potential-plagiarism") numPotentialPlagiarism++;
-            else if (verdict === "no-verdict") numNoVerdict += 1;
+            const v = window.electronApi.getVerdict(m.location1, m.location2);
+            if (v === "plagiarism") numPlagiarism++;
+            else if (v === "potential-plagiarism") numPotentialPlagiarism++;
+            else if (v === "no-verdict") numNoVerdict += 1;
         }
         return { numPlagiarism, numPotentialPlagiarism, numNoVerdict };
     }
