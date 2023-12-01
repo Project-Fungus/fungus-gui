@@ -6,6 +6,35 @@
 }
 
 #help-view img {
-    max-width: calc(0.85 * (100% - 4 * var(--outer-padding)));
+    max-width: calc(100% - 2 * var(--outer-padding));
+    width: 50em;
     border: 1px solid black;
+}
+
+#help-view img.no-border {
+    border: none;
+}
+
+ol {
+    list-style: none;
+    counter-reset: list-number;
+}
+
+ol>li {
+    counter-increment: list-number;
+    position: relative;
+    margin-top: 0.5em;
+}
+
+ol>li:before {
+    content: counter(list-number);
+    margin-right: 0.5em;
+    background-color: red;
+    color: white;
+    width: 1.2em;
+    border-radius: 50%;
+    text-align: center;
+    display: inline-block;
+    position: absolute;
+    left: -2em;
 }

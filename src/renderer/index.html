@@ -139,7 +139,6 @@ int main() {
             </div>
         </div>
         <!-- HELP -->
-        <!-- TODO: Make this more visual by labelling the images. -->
         <div id="help-view" class="hide">
             <h2>Using FUNGUS</h2>
             <h3>Opening Files</h3>
@@ -156,31 +155,31 @@ int main() {
             </ol>
             <h3>Examining Matches</h3>
             <img src="../../img/project-pairs-view.png" />
-            <p><i>Access this page by pressing Ctrl+M (Cmd+M on MaC), or through the menu via View &gt; Matches.</i></p>
-            <p>This page shows the matches identified by the command-line tool.</p>
-            <h4>Project Pairs</h4>
-            <p>The sidebar on the left shows the pairs of projects in which matching code snippets were found. For each
-                project pair, the sidebar shows the number of matches confirmed as plagiarism, the number of matches
-                that are potentially plagiarism, and the number of matches that have not yet been judged.</p>
-            <p>For example, for the projects arm-rosettacode-15_puzzle_game and
-                arm-rosettacode-Keyboard_input-Keypress_check,</p>
-            <ul>
-                <li>2 matches have been confirmed as plagiarism,</li>
-                <li>1 match has been marked as potential plagiarism, and</li>
-                <li>5 matches have yet to be judged.</li>
-            </ul>
-            <h4>Navigating Matches</h4>
-            <p>All matching code snippets are highlighted in yellow. The current match is also underlined. To move to
-                the next or previous match, you can use the arrow buttons at the top of the page. You can also click
-                on a highlighted piece of code to jump to that match. In either case, both projects will scroll their
-                side of the selected match into view.</p>
-            <h4>Filtering Matches</h4>
-            <p>To adjust which matches are shown and which are hidden, use the "Filter Matches" button at the top of the
-                page.</p>
-            <h4>Giving Verdicts</h4>
-            <p>You can record whether or not you believe a given <i>match</i> is plagiarism using the buttons at the top
-                right-hand corner of the page. If you change your mind, you can change your choice by adjusting the
-                match filters.</p>
+            <p><i>Access this page by pressing Ctrl+M (Cmd+M on MaC), or through the menu via View &gt; Matches.</i>
+            <ol>
+                <li>
+                    <b>Project pairs.</b>
+                    This is the list of pairs of projects which may contain matching code.
+                    Below the project names are the numbers of matches by verdict.
+                    <img src="../../img/one-project-pairs-stats.png" class="no-border" />
+                </li>
+                <li>
+                    <b>Navigating matches.</b>
+                    All matching code snippets are highlighted in yellow.
+                    The current match is also underlined.
+                    To move to the next or previous match, you can use the arrow buttons at the top of the page.
+                    You can also click on a highlighted piece of code to jump to that match.
+                    In either case, both projects will scroll their side of the selected match into view.
+                </li>
+                <li><b>Filtering matches.</b> Adjust which matches are shown and which are hidden.</li>
+                <li>
+                    <b>Giving verdicts.</b>
+                    Record whether or not you believe a given <i>match</i> is plagiarism using the buttons at the top
+                    right-hand corner of the page.
+                    If you change your mind, you can change your verdict by adjusting the match filters, finding the
+                    match, and pressing the button for the new verdict.
+                </li>
+            </ol>
             <h3>Examining Warnings</h3>
             <img src="../../img/warnings-view.png" />
             <p><i>Access this page by pressing Ctrl+W (Cmd+W on MaC), or through the menu via View &gt; Warnings.</i>
