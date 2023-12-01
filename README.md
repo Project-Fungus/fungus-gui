@@ -2,29 +2,23 @@
 
 Desktop GUI written using the Electron framework.
 
-## Starting the App
+This relies on the [FUNGUS command-line tool](https://github.com/Project-Fungus/fungus-cli).
 
-Run
+## Development Tasks
+
+To start the app, run
 ```
 npm run start
 ```
 
-## Linting
-
-Run
+To check lints, run
 ```
 npm run lint
 ```
 
-## Testing the App
-
-### Unit Tests
-
-Run
+To run the automated unit tests, run
 ```
 npm run test
 ```
 
-### Manual Tests
-
-Run the app normally and then open one of the JSON files in `/test/` along with the `/test/projects/` directory. Play around and check that everything looks normal. Note that `unreadable-file.json` is meant to simulate what happens when the user tries to open a file that can't be read, so you should make sure you do *not* have permission to read it.
+For manual testing, run the app normally and then open one of the JSON files in `/test/` along with the `/test/projects/` directory. Play around and check that everything looks normal. Note that `unreadable-file.json` is meant to simulate what happens when the user tries to open a file that can't be read, so you should make sure you do *not* have permission to read it.
