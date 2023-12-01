@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld("electronApi", {
     onShowWarningsView: (callback) => {
         ipcRenderer.on("show-warnings-view", callback);
     },
+    onShowHelpView: (callback) => {
+        ipcRenderer.on("show-help-view", callback);
+    },
     showOpenDialog,
     showSaveDialog,
     readFile,

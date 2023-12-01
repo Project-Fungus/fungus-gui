@@ -1,0 +1,11 @@
+#help-view {
+    padding: var(--outer-padding);
+    margin: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+#help-view img {
+    max-width: calc(0.85 * (100% - 4 * var(--outer-padding)));
+    border: 1px solid black;
+}
