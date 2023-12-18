@@ -8,12 +8,10 @@
     <title id="document-title">FUNGUS</title>
     <script src="./index.js" type="module"></script>
     <link href="./index.css" rel="stylesheet" />
-    <script src="./warnings-view.js" type="module"></script>
     <link href="./warnings-view.css" rel="stylesheet" />
-    <script src="./project-pairs-view.js" type="module"></script>
     <link href="./project-pairs-view.css" rel="stylesheet" />
-    <script src="./open-files-view.js" type="module"></script>
     <link href="./open-files-view.css" rel="stylesheet" />
+    <link href="./help-view.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -140,8 +138,57 @@ int main() {
                 </table>
             </div>
         </div>
+        <!-- HELP -->
+        <div id="help-view" class="hide">
+            <h2>Using FUNGUS</h2>
+            <h3>Opening Files</h3>
+            <img src="../../img/open-files-view.png" />
+            <p><i>Access this page by pressing Ctrl+O (Cmd+O on Mac), or through the menu via File &gt; Open.</i>
+            </p>
+            <p>To start viewing the output of FUNGUS, you must specify the following three files:</p>
+            <ol>
+                <li><b>Plagiarism results.</b> This is the JSON file produced by the command-line tool.</li>
+                <li><b>Projects.</b> This is the root directory that was given as input to the command-line tool.</li>
+                <li><b>Verdicts.</b> This file is used to store your decisions about whether or not a given match is
+                    a case of plagiarism. If this file does not yet exist, you must check the "New File" checkbox before
+                    choosing where to save it.</li>
+            </ol>
+            <h3>Examining Matches</h3>
+            <img src="../../img/project-pairs-view.png" />
+            <p><i>Access this page by pressing Ctrl+M (Cmd+M on MaC), or through the menu via View &gt; Matches.</i>
+            <ol>
+                <li>
+                    <b>Project pairs.</b>
+                    This is the list of pairs of projects which may contain matching code.
+                    Below the project names are the numbers of matches by verdict.
+                    <img src="../../img/one-project-pairs-stats.png" class="no-border" />
+                </li>
+                <li>
+                    <b>Navigating matches.</b>
+                    All matching code snippets are highlighted in yellow.
+                    The current match is also underlined.
+                    To move to the next or previous match, you can use the arrow buttons at the top of the page.
+                    You can also click on a highlighted piece of code to jump to that match.
+                    In either case, both projects will scroll their side of the selected match into view.
+                </li>
+                <li><b>Filtering matches.</b> Adjust which matches are shown and which are hidden.</li>
+                <li>
+                    <b>Giving verdicts.</b>
+                    Record whether or not you believe a given <i>match</i> is plagiarism using the buttons at the top
+                    right-hand corner of the page.
+                    If you change your mind, you can change your verdict by adjusting the match filters, finding the
+                    match, and pressing the button for the new verdict.
+                </li>
+            </ol>
+            <h3>Examining Warnings</h3>
+            <img src="../../img/warnings-view.png" />
+            <p><i>Access this page by pressing Ctrl+W (Cmd+W on MaC), or through the menu via View &gt; Warnings.</i>
+            </p>
+            <h3>Getting Help</h3>
+            <img src="../../img/help-view.png" />
+            <p><i>Access this page by pressing Alt+H, or through the menu by pressing the Help button.</i></p>
+        </div>
     </main>
 </body>
-
 
 </html>

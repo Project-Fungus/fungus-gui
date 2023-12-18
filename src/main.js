@@ -89,6 +89,12 @@ function createApplicationMenu() {
                 { type: "separator" },
                 { role: "toggleDevTools" },
             ]
+        },
+        {
+            label: "&Help",
+            click: (_, browserWindow) => {
+                browserWindow.webContents.send("show-help-view");
+            }
         }
     ]);
     Menu.setApplicationMenu(menu);

@@ -1,0 +1,92 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Build for release?"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+  build_release:
+    if: ${{ inputs.release }}
+    needs: test
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { os: macos-12    , artifact-name: fungus-gui-macos   }
+          - { os: windows-2022, artifact-name: fungus-gui-windows }
+          - { os: ubuntu-22.04, artifact-name: fungus-gui-linux   }
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'npm'
+      - run: npm ci
+      - name: Install dependency for building dmg
+        if: runner.os == 'macOS'
+        shell: bash
+        # https://github.com/actions/runner/issues/2958#issuecomment-1852627308
+        run: sudo -H pip install setuptools && npm install appdmg
+      - run: npm run make
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.job.artifact-name }}-zip
+          path: out/make/zip/**/*.zip
+          if-no-files-found: error
+      - name: Upload squirrel artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.job.artifact-name }}-squirrel
+          path: out/make/squirrel.windows/
+          if-no-files-found: error
+      - name: Upload deb artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.job.artifact-name }}-deb
+          path: out/make/deb/
+          if-no-files-found: error
+      - name: Upload rpm artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.job.artifact-name }}-rpm
+          path: out/make/rpm/
+          if-no-files-found: error
+      - name: Upload dmg artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.job.artifact-name }}-dmg
+          path: out/make/*.dmg
+          if-no-files-found: error
