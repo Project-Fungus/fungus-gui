@@ -3,6 +3,16 @@
   "author": "Louis Hildebrand <louis.hildebrand@mail.mcgill.ca>",
   "version": "1.0.0",
   "description": "A frontend to the FUNGUS plagiarism detection tool.",
+  "keywords": [
+    "plagiarism",
+    "copy_detection",
+    "assignments"
+  ],
+  "homepage": "https://github.com/Project-Fungus/fungus-gui",
+  "repository": "https://github.com/Project-Fungus/fungus-gui",
+  "bugs": "https://github.com/Project-Fungus/fungus-gui/issues",
+  "license": "MIT",
+  "readme": "README.md",
   "main": "./src/main.js",
   "scripts": {
     "start": "electron-forge start",
