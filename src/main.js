@@ -121,7 +121,7 @@ function createApplicationMenu() {
             submenu: [
                 {
                     label: "Matches",
-                    accelerator: "CmdOrCtrl+M",
+                    accelerator: "CmdOrCtrl+Shift+M",
                     click: (_, browserWindow) => {
                         browserWindow.webContents.send(
                             "show-project-pairs-view"
@@ -130,7 +130,7 @@ function createApplicationMenu() {
                 },
                 {
                     label: "Warnings",
-                    accelerator: "CmdOrCtrl+W",
+                    accelerator: "CmdOrCtrl+Shift+W",
                     click: (_, browserWindow) => {
                         browserWindow.webContents.send("show-warnings-view");
                     },
