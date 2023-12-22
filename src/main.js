@@ -9,13 +9,13 @@ app.whenReady().then(() => {
     createWindow();
 
     app.on("activate", () => {
-        if (BrowserWindow.getAllWindows().length === 0)
-            createWindow();
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
     ipcMain.handle("dialog:showOpenDialog", async (event, options) => {
         const browserWindow = BrowserWindow.fromWebContents(event.sender);
         const result = await dialog.showOpenDialog(browserWindow, options);
-        const noInput = result.canceled
+        const noInput =
+            result.canceled
             || !result.filePaths
             || result.filePaths.length <= 0;
         return noInput ? null : result.filePaths[0];
@@ -30,8 +30,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-    if (process.platform !== "darwin")
-        app.quit();
+    if (process.platform !== "darwin") app.quit();
 });
 
 function createWindow() {
@@ -39,9 +38,9 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             // Allow the preload script to read local files
-            sandbox: false
+            sandbox: false,
         },
-        show: false
+        show: false,
     });
     window.maximize();
     window.loadFile(path.join(__dirname, "renderer/index.html"));
@@ -49,53 +48,133 @@ function createWindow() {
 }
 
 function createApplicationMenu() {
+    const isMac = process.platform === "darwin";
+
     const menu = Menu.buildFromTemplate([
+        // { role: 'appMenu' }
+        ...(isMac
+            ? [
+                {
+                    label: app.name,
+                    submenu: [
+                        { role: "about" },
+                        { type: "separator" },
+                        { role: "services" },
+                        { type: "separator" },
+                        { role: "hide" },
+                        { role: "hideOthers" },
+                        { role: "unhide" },
+                        { type: "separator" },
+                        { role: "quit" },
+                    ],
+                },
+            ]
+            : []),
+        // { role: 'fileMenu' }
         {
             label: "&File",
             submenu: [
                 {
-                    label: "Open",
+                    label: isMac ? "Open..." : "Open",
                     accelerator: "CmdOrCtrl+O",
                     click: (_, browserWindow) => {
                         browserWindow.webContents.send("show-open-files-view");
-                    }
+                    },
                 },
-                { role: "quit" }
-            ]
+                isMac ? { role: "close" } : { role: "quit" },
+            ],
         },
+        // { role: 'editMenu' }
         {
-            label: "&View",
+            label: "&Edit",
+            submenu: [
+                { role: "undo" },
+                { role: "redo" },
+                { type: "separator" },
+                { role: "cut" },
+                { role: "copy" },
+                { role: "paste" },
+                ...(isMac
+                    ? [
+                        { role: "pasteAndMatchStyle" },
+                        { role: "delete" },
+                        { role: "selectAll" },
+                        { type: "separator" },
+                        {
+                            label: "Speech",
+                            submenu: [
+                                { role: "startSpeaking" },
+                                { role: "stopSpeaking" }
+                            ],
+                        },
+                    ]
+                    : [
+                        { role: "delete" },
+                        { type: "separator" },
+                        { role: "selectAll" }
+                    ]),
+            ],
+        },
+        // { role: 'viewMenu' }
+        {
+            label: "View",
             submenu: [
                 {
                     label: "Matches",
-                    accelerator: "CmdOrCtrl+M",
+                    accelerator: "CmdOrCtrl+Shift+M",
                     click: (_, browserWindow) => {
-                        browserWindow.webContents
-                            .send("show-project-pairs-view");
-                    }
+                        browserWindow.webContents.send(
+                            "show-project-pairs-view"
+                        );
+                    },
                 },
                 {
                     label: "Warnings",
-                    accelerator: "CmdOrCtrl+W",
+                    accelerator: "CmdOrCtrl+Shift+W",
                     click: (_, browserWindow) => {
                         browserWindow.webContents.send("show-warnings-view");
-                    }
+                    },
                 },
                 { type: "separator" },
-                { role: "zoomIn", accelerator: "CmdOrCtrl+=" },
-                { role: "zoomOut" },
-                { role: "resetZoom" },
-                { role: "togglefullscreen" },
-                { type: "separator" },
+                { role: "reload" },
+                { role: "forceReload" },
                 { role: "toggleDevTools" },
-            ]
+                { type: "separator" },
+                { role: "resetZoom" },
+                { role: "zoomIn" },
+                { role: "zoomOut" },
+                { type: "separator" },
+                { role: "togglefullscreen" },
+            ],
+        },
+        // { role: 'windowMenu' }
+        {
+            label: "Window",
+            submenu: [
+                { role: "minimize" },
+                { role: "zoom" },
+                ...(isMac
+                    ? [
+                        { type: "separator" },
+                        { role: "front" },
+                        { type: "separator" },
+                        { role: "window" },
+                    ]
+                    : [{ role: "close" }]),
+            ],
         },
         {
-            label: "&Help",
-            click: (_, browserWindow) => {
-                browserWindow.webContents.send("show-help-view");
-            }
-        }
+            role: "help",
+            submenu: [
+                {
+                    label: "Get Help?",
+                    click: (_, browserWindow) => {
+                        browserWindow.webContents.send("show-help-view");
+                    },
+                    accelerator: isMac ? "Cmd+?" : "Alt+H"
+                },
+            ],
+        },
     ]);
     Menu.setApplicationMenu(menu);
 }
