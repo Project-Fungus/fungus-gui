@@ -171,6 +171,7 @@ function createApplicationMenu() {
                     click: (_, browserWindow) => {
                         browserWindow.webContents.send("show-help-view");
                     },
+                    accelerator: isMac ? "Cmd+?" : "Alt+H"
                 },
             ],
         },
