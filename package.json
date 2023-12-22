@@ -1,6 +1,10 @@
 {
   "name": "fungus-gui",
   "author": "Louis Hildebrand <louis.hildebrand@mail.mcgill.ca>",
+  "contributors": [
+    "Louis Hildebrand",
+    "Gabriel Lacroix"
+  ],
   "version": "1.0.0",
   "description": "A frontend to the FUNGUS plagiarism detection tool.",
   "keywords": [
