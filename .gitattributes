@@ -1,1 +1,6 @@
 * text eol=lf
+# By default, Git seems to treat PNGs as text and apply the EOL rule!
+# Explicitly say that PNGs are not text.
+*.png -text
+# Explicitly handle JPG as well, just in case.
+*.jpg -text
